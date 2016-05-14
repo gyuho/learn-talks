@@ -1,0 +1,230 @@
+etcd
+Gopherfest
+16 May 2016
+
+Gyu-Ho Lee
+CoreOS
+gyu_ho.lee@coreos.com
+https://github.com/gyuho/presentations
+
+
+* Welcome
+
+Thanks for coming!
+
+Thanks for inviting me to speak!
+
+Slides are available at:
+
+.link https://github.com/gyuho/presentations github.com/gyuho/presentations
+
+
+* Agenda
+
+- What is etcd
+- Why
+- Go
+- Q/A
+
+
+* What is etcd
+
+
+* etcd is ...
+
+- Distributed key-value store
+- Go
+- Open source
+- [[https://github.com/coreos/etcd][github.com/coreos/etcd]]
+- Google, Red Hat, EMC, Cisco, Huawei, Baidu, Alibaba...
+
+
+* Distributed?
+
+.link http://play.etcd.io play.etcd.io
+
+Join me!
+
+
+* Why etcd
+
+* Uncoordinated updates
+
+.image img/coreos_update_uncoordinated_00.png _ 700
+
+How would you update the cluster of machines?
+
+
+* Uncoordinated updates
+
+.image img/coreos_update_uncoordinated_01.png _ 700
+
+Unavailable!
+
+
+* Use case #1
+
+.image img/coreos_update_coordinated_00.png _ 700
+
+CoreOS updates with [[https://github.com/coreos/locksmith][github.com/coreos/locksmith]]
+
+
+* Use case #1
+
+.image img/coreos_update_coordinated_01.png _ 700
+
+Automatic
+
+
+* Use case #1
+
+.image img/coreos_update_coordinated_02.png _ 700
+
+No downtime
+
+
+* Use case #1
+
+.image img/coreos_update_coordinated_03.png _ 700
+
+Your cluster is now secured
+
+
+* Use case #2
+
+_"Read_configuration_files_from_an_external_store_[Google_Chubby]"_
+
+_Google_Site_Reliability_Engineering,_p94_
+
+
+* Bad practice
+
+.image img/etcd_store_configuration_bad_00.png _ 700
+
+
+* Bad practice
+
+.image img/etcd_store_configuration_bad_01.png _ 700
+
+
+* Good practice
+
+.image img/etcd_store_configuration_good_00.png _ 700
+
+
+* Good practice
+
+.image img/etcd_store_configuration_good_01.png _ 700
+
+
+* Summarize
+
+What is etcd?
+
+- Consistent view of critical configuration
+- Highly available
+- Watchable
+
+# Strong Consistency
+# mutual exclusive at any time for locking purpose
+
+# Highly Available
+# resilient to single points of failure & network partitions
+
+# Watchable
+# push configuration updates to application
+
+
+* Why not Zookeeper or Consul?
+
+
+* etcd Project Status
+
+
+* etcd Reliability
+
+Extensive tests
+
+- [[http://dash.etcd.io/dashboard/db/functional-tests][dash.etcd.io]]
+- >12,000 failure injections per day
+- >1.5M injected for etcd v3
+
+
+* etcd Reliability
+
+Functional tests
+
+- Kill all members
+- Kill majority of members
+- Kill leader
+- Network partition
+- Network latency
+
+
+* etcd Performance
+
+- [[https://github.com/boltdb/bolt][BoltDB]] for storage
+- [[http://www.grpc.io/][gRPC]] for RPC, HTTP/2
+
+etcd v3 will have much better performance!
+
+# histogram
+# tcp conns
+
+
+* etcd Performance
+
+etcd vs others
+
+TODO
+
+* etcd + Go
+
+
+* #1 gofmt, go vet
+
+TODO
+
+
+* #2 gosimple, unused
+
+TODO
+
+
+* #3 goword
+
+TODO
+
+
+* #4 go test
+
+- unit tests
+- integration tests
+- e2e tests
+- functional tests
+- benchmark tests
+
+
+* #5 Leaky goroutines
+
+TODO
+
+
+* #7 Slice allocation optimization
+
+TODO
+
+
+* #8 bytes-key map optimization
+
+TODO
+
+
+* #9 Use latest Go
+
+TODO
+
+
+* #10 vendor
+
+TODO
