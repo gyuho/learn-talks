@@ -41,13 +41,6 @@ Slides are here:
 - Google, Red Hat, EMC, Cisco, Huawei, Baidu, Alibaba...
 
 
-* Demo
-
-.link http://play.etcd.io play.etcd.io
-
-Join me!
-
-
 
 * etcd API
 
@@ -143,6 +136,13 @@ Your cluster is now secured
 * Good practice
 
 .image img/etcd_store_configuration_good_01.png _ 700
+
+
+* Demo
+
+.link http://play.etcd.io play.etcd.io
+
+Join me!
 
 
 * etcd
