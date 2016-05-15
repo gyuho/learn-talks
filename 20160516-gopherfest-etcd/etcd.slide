@@ -90,13 +90,13 @@ How would you update the cluster of machines?
 
 * CoreOS updates with etcd
 
+- CoreOS is an open-source Linux OS
+- Automatic, No-downtime updates with etcd
+
 .image img/coreos_update.png 250 1000
 
 
 * CoreOS updates with etcd
-
-- CoreOS is an open-source Linux OS
-- Automatic, No-downtime updates with etcd
 
 .image img/coreos_update_coordinated_00.png _ 700
 
