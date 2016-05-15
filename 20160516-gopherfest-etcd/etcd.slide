@@ -73,6 +73,8 @@ Slides are here:
 
 * Updates
 
+Security updates?
+
 .image img/coreos_update_uncoordinated_00.png _ 700
 
 How would you update the cluster of machines?
@@ -84,6 +86,11 @@ How would you update the cluster of machines?
 
 - Reboot with downtime
 - Manual
+
+
+* CoreOS updates with etcd
+
+.image img/coreos_update.png 250 1000
 
 
 * CoreOS updates with etcd
