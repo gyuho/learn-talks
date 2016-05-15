@@ -1,11 +1,11 @@
-etcd
+etcd: mission critical key-value store
 Gopherfest
 16 May 2016
 
 Gyu-Ho Lee
 CoreOS
 gyu_ho.lee@coreos.com
-https://github.com/gyuho/presentations
+https://github.com/coreos/etcd
 
 
 * Welcome
@@ -14,9 +14,15 @@ Thanks for coming!
 
 Thanks for inviting me to speak!
 
-Slides are available at:
+Slides are here:
 
 .link https://github.com/gyuho/presentations github.com/gyuho/presentations
+
+
+* Go + etcd
+
+.image img/gopherbw.png _ 200
+.image img/etcd-glyph-color.svg _ 200
 
 
 * Agenda
@@ -33,22 +39,48 @@ Slides are available at:
 * etcd is ...
 
 - Distributed key-value store
-- Go
-- Open source
-- [[https://github.com/coreos/etcd][github.com/coreos/etcd]]
+- Open source [[https://github.com/coreos/etcd][github.com/coreos/etcd]]
+- Since June 2013
+- Still new (vs ZooKeeper since May 2008)
 - Google, Red Hat, EMC, Cisco, Huawei, Baidu, Alibaba...
 
 
-* Distributed?
+* Demo
 
 .link http://play.etcd.io play.etcd.io
 
 Join me!
 
 
+
+* etcd API
+
+
+    cli.Put(ctx, "foo", "bar", Lease)
+    cli.Get(ctx, "foo")
+    cli.Delete(ctx, "foo")
+
+    // Transaction
+    kvc.Txn(ctx).
+     If(clientv3.Compare(clientv3.Value("key"), ">", "abc")). // txn value comparisons are lexical
+     Then(clientv3.OpPut("key", "XYZ")).                      // this runs, since 'xyz' > 'abc'
+     Else(clientv3.OpPut("key", "ABC")).
+     Commit()
+    
+    // Watch for updates on key
+    ch := cli.Watch(ctx, "foo") 
+    for res := range ch {}
+
+    // Distributed locks
+    mu := concurrency.NewMutex(cli, "foo")
+    mu.Lock()
+    mu.Unlock()
+
+
+
 * Why etcd
 
-* etcd to store configuration
+* Use etcd to store configuration
 
 * Updates
 
@@ -97,7 +129,7 @@ Powered by etcd and [[https://github.com/coreos/locksmith][github.com/coreos/loc
 
 Your cluster is now secured
 
-* etcd for "critical" configuration
+* Use etcd for "critical" configuration
 
 * Bad practice
 
@@ -121,18 +153,19 @@ Your cluster is now secured
 
 Consistent view of critical configuration
 
-- mutual exclusive at any time for locking purpose
+- Strong consistency (no stale reads)
+- Different than eventual consistency (conflicts, latest timestamps wins)
 
-Highly available
+Highly available configuration store
 
-- resilient to single points of failure & network partitions
+- Resilient to a single point of failures & network partitions
 
 Watchable
 
-- push configuration updates to application
+- Push configuration updates to application
 
 
-* Why not Zookeeper or Consul?
+* Why not ZooKeeper or Consul?
 
 
 * etcd Project Status
@@ -146,7 +179,7 @@ Watchable
 
 - B+tree disk storage
 - Incremental snapshot
-- vs Zookeeper snapCount 10,000 
+- vs ZooKeeper snapCount 10,000 
 
 [[http://www.grpc.io/][gRPC]]
 
@@ -182,7 +215,7 @@ Watchable
 
 .image img/etcd_vs_zk_throughput_comment.png 350 950
 
-Zookeeper logs
+ZooKeeper logs
 
     07:16:35 [Snapshot Thread:FileTxnSnapLog@240] - Snapshotting...
     07:16:43 fsync-ing the write ahead log in SyncThread:3 took 1224ms...
@@ -312,9 +345,9 @@ go vet
 
 * #6 Write simple Go
 
-    ok := true
-    if ok == true {}  // X
-    if ok {}          // O
+   ok := true
+   if ok == true {}  // X
+   if ok {}          // O
 
 Don't:
 
@@ -335,6 +368,9 @@ Do:
 
 - [[https://github.com/dominikh/go-unused][github.com/dominikh/go-unused]] by Dominik
 - Finds unused constants, variables, functions and types
+
+    func reportMetrics() {}
+    // func reportMetrics is unused
 
 Found bugs in etcd [[https://github.com/coreos/etcd/pull/4995/files][GH4955]]
 
@@ -358,7 +394,7 @@ Spell checker
 
 - etcd must be easy to use
 - etcd needs good documentation
-- Example? [[https://godoc.org/github.com/coreos/etcd/clientv3#example-KV--Get][etcd/clientv3]]
+- Example? [[https://github.com/coreos/etcd/tree/master/clientv3][etcd/clientv3]]
 
 
 * #10 vendor
@@ -370,6 +406,7 @@ Problem
 - Project B import this etcd client package
 - Project B also uses gRPC but from different import path
 
+
 Now two projects has conflicting gRPC code [[https://github.com/grpc/grpc-go/issues/566][GH566]]
 
     panic: http: multiple registrations for /debug/requests
@@ -380,11 +417,15 @@ Now two projects has conflicting gRPC code [[https://github.com/grpc/grpc-go/iss
 Solution [[https://github.com/coreos/etcd/pull/4950][GH4950]]
 
 - Create symlinks inside cmd directory
-- Keep vendor inside cmd directory
+- ln -s main.go cmd/main.go
+- cmd/vendor
 
-Now
+Update dependency
 
-- Still go-get-able
-- No conflicts with other projects
+- ln -s cmd/vendor vendor
+- godep save
 
-It works, even on Windows.
+
+Still go-get-able. No conflicts with other projects.
+
+Works, even on Windows!
