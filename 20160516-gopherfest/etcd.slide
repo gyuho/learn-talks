@@ -48,64 +48,64 @@ Join me!
 
 * Why etcd
 
-* Uncoordinated updates
+* etcd to store configuration
+
+* Updates
 
 .image img/coreos_update_uncoordinated_00.png _ 700
 
 How would you update the cluster of machines?
 
 
-* Uncoordinated updates
+* Traditional way
 
 .image img/coreos_update_uncoordinated_01.png _ 700
 
-Unavailable!
+- Reboot with downtime
+- Manual
 
 
-* Use case #1
+* CoreOS updates with etcd
+
+- CoreOS is an open-source Linux OS
+- Automatic, No-downtime updates with etcd
 
 .image img/coreos_update_coordinated_00.png _ 700
 
-CoreOS updates with [[https://github.com/coreos/locksmith][github.com/coreos/locksmith]]
+Powered by etcd and [[https://github.com/coreos/locksmith][github.com/coreos/locksmith]]
 
 
-* Use case #1
+* CoreOS updates with etcd
+
+- locksmith stores semephore values in etcd
+- ensure that only a subset of a cluster of machines are rebooting at any given time
 
 .image img/coreos_update_coordinated_01.png _ 700
 
-Automatic
 
+* CoreOS updates with etcd
 
-* Use case #1
+- Automatic
+- No downtime
 
 .image img/coreos_update_coordinated_02.png _ 700
 
-No downtime
 
-
-* Use case #1
+* CoreOS updates with etcd
 
 .image img/coreos_update_coordinated_03.png _ 700
 
 Your cluster is now secured
 
-
-* Use case #2
-
-_"Read_configuration_files_from_an_external_store_[Google_Chubby]"_
-
-_Google_Site_Reliability_Engineering,_p94_
-
+* etcd for "critical" configuration
 
 * Bad practice
 
 .image img/etcd_store_configuration_bad_00.png _ 700
 
-
 * Bad practice
 
 .image img/etcd_store_configuration_bad_01.png _ 700
-
 
 * Good practice
 
@@ -117,22 +117,19 @@ _Google_Site_Reliability_Engineering,_p94_
 .image img/etcd_store_configuration_good_01.png _ 700
 
 
-* Summarize
+* etcd
 
-What is etcd?
+Consistent view of critical configuration
 
-- Consistent view of critical configuration
-- Highly available
-- Watchable
+- mutual exclusive at any time for locking purpose
 
-# Strong Consistency
-# mutual exclusive at any time for locking purpose
+Highly available
 
-# Highly Available
-# resilient to single points of failure & network partitions
+- resilient to single points of failure & network partitions
 
-# Watchable
-# push configuration updates to application
+Watchable
+
+- push configuration updates to application
 
 
 * Why not Zookeeper or Consul?
@@ -141,90 +138,253 @@ What is etcd?
 * etcd Project Status
 
 
+* etcd Performance
+
+* etcd v3
+
+[[https://github.com/boltdb/bolt][BoltDB]]
+
+- B+tree disk storage
+- Incremental snapshot
+- vs Zookeeper snapCount 10,000 
+
+[[http://www.grpc.io/][gRPC]]
+
+- Protocol Buffer
+- HTTP/2
+- streams, less TCP congestions
+
+
+* Throughput
+
+.image img/etcd_vs_others_throughput.svg _ 900
+
+* Latency
+
+.image img/etcd_vs_others_latency.svg _ 900
+
+* CPU
+
+.image img/etcd_vs_others_cpu.svg _ 900
+
+* Memory
+
+.image img/etcd_vs_others_memory.svg _ 900
+
+
 * etcd Reliability
 
-Extensive tests
+* Throughput
 
-- [[http://dash.etcd.io/dashboard/db/functional-tests][dash.etcd.io]]
-- >12,000 failure injections per day
-- >1.5M injected for etcd v3
+.image img/etcd_vs_zk_throughput.svg _ 900
+
+* etcd Reliability
+
+.image img/etcd_vs_zk_throughput_comment.png 350 950
+
+Zookeeper logs
+
+    07:16:35 [Snapshot Thread:FileTxnSnapLog@240] - Snapshotting...
+    07:16:43 fsync-ing the write ahead log in SyncThread:3 took 1224ms...
+    07:16:46 fsync-ing the write ahead log in SyncThread:3 took 3205ms... // Snapshotting
+    ...
+    07:17:14 [FastLeaderElection@818] - New election...                   // Leader Election
 
 
 * etcd Reliability
 
-Functional tests
+We test...
 
 - Kill all members
 - Kill majority of members
 - Kill leader
 - Network partition
 - Network latency
+- More...
 
 
-* etcd Performance
+* etcd Reliability
 
-- [[https://github.com/boltdb/bolt][BoltDB]] for storage
-- [[http://www.grpc.io/][gRPC]] for RPC, HTTP/2
+Intensive failure injection testing
 
-etcd v3 will have much better performance!
-
-# histogram
-# tcp conns
+- [[http://dash.etcd.io/dashboard/db/functional-tests][dash.etcd.io]]
+- >12,000 failure injections per day
+- >1.5M injected for etcd v3
 
 
-* etcd Performance
-
-etcd vs others
-
-TODO
-
-* etcd + Go
+* etcd Go 10 Tips
 
 
-* #1 gofmt, go vet
+* #1 Use latest Go
 
-TODO
+* Throughput
+
+.image img/etcd_go_throughput.svg _ 900
+
+* Latency
+
+.image img/etcd_go_latency.svg _ 900
+
+* CPU
+
+.image img/etcd_go_cpu.svg _ 900
+
+* Memory
+
+.image img/etcd_go_memory.svg _ 900
 
 
-* #2 gosimple, unused
 
-TODO
+* #2 Check slice allocation
+
+[[https://github.com/coreos/etcd/pull/5238][GH5238]]
+
+    s.changes = make([]mvccpb.KeyValue, 0, 128)
+    s.changes = make([]mvccpb.KeyValue, 0, 4)    // better for etcd use case
+
+More capacity means more allocation.
+
+Check your use case when making slice!
 
 
-* #3 goword
+* Throughput
 
-TODO
+.image img/etcd_slice_optimization_throughput.svg _ 900
 
 
-* #4 go test
+* Latency
+
+.image img/etcd_slice_optimization_latency.svg _ 900
+
+
+
+* #3 Test your code
+
+All with "go test" command
 
 - unit tests
 - integration tests
-- e2e tests
 - functional tests
-- benchmark tests
+- benchmarks
+
+Use expect package for e2e tests
+
+    proc, _ = expect.NewExpect("etcdctl", "get", "foo")
+    _, err = proc.Expect("bar")  // if err != nil, found a bug!
+
+[[https://godoc.org/github.com/coreos/etcd/pkg/expect][github.com/coreos/etcd/pkg/expect]]
 
 
-* #5 Leaky goroutines
+* #4 Check goroutine leaks
 
-TODO
+Scan runtime.Stack
+
+	func TestMain(m *testing.M) {
+		v := m.Run()
+		if v == 0 && testutil.CheckLeakedGoroutine() {
+			os.Exit(1)
+		}
+		os.Exit(v)
+	}
+
+	func TestSample(t *testing.T) {
+		defer testutil.AfterTest(t)
+		...
+	}
 
 
-* #7 Slice allocation optimization
+- [[https://github.com/golang/go/blob/master/src/net/http/main_test.go][net/http/main_test.go]]
+- [[https://godoc.org/github.com/coreos/etcd/pkg/testutil][github.com/coreos/etcd/pkg/testutil]]
 
-TODO
-
-
-* #8 bytes-key map optimization
-
-TODO
+Highly recommend for projects with context.Context, gRPC
 
 
-* #9 Use latest Go
+* #5 Always gofmt, go vet
 
-TODO
+gofmt
+.image img/gofmt.png _ 400
+
+go vet
+
+	log.Fatalf("hello %d", "a")
+	// arg "a" for printf verb %d of wrong type: string
+
+
+* #6 Write simple Go
+
+    ok := true
+    if ok == true {}  // X
+    if ok {}          // O
+
+Don't:
+
+    err := l.newStream()
+    if err != nil {		
+        return err		
+    }		
+    return nil		
+
+Do:
+
+    return l.newStream()
+
+[[https://github.com/dominikh/go-simple][github.com/dominikh/go-simple]] by Dominik
+
+
+* #7 Check unused
+
+- [[https://github.com/dominikh/go-unused][github.com/dominikh/go-unused]] by Dominik
+- Finds unused constants, variables, functions and types
+
+Found bugs in etcd [[https://github.com/coreos/etcd/pull/4995/files][GH4955]]
+
+
+* #8 Use goword
+
+- [[https://github.com/chzchzchz/goword][github.com/chzchzchz/goword]] by Anthony (etcd team)
+
+Comment checker
+
+    // This.
+    func Hello() {}  // This. (godoc-export: This -> Hello?)"
+
+Spell checker
+
+    // Hello retuens.
+    func Hello() {}  // Hello retuens. (spell: retuens -> returns?)
+
+
+* #9 Document with godoc
+
+- etcd must be easy to use
+- etcd needs good documentation
+- Example? [[https://godoc.org/github.com/coreos/etcd/clientv3#example-KV--Get][etcd/clientv3]]
 
 
 * #10 vendor
 
-TODO
+Problem
+
+- etcd client package is used within etcd repo (etcdctl)
+- etcd client imports gRPC and vendors it
+- Project B import this etcd client package
+- Project B also uses gRPC but from different import path
+
+Now two projects has conflicting gRPC code [[https://github.com/grpc/grpc-go/issues/566][GH566]]
+
+    panic: http: multiple registrations for /debug/requests
+
+
+* #10 vendor
+
+Solution [[https://github.com/coreos/etcd/pull/4950][GH4950]]
+
+- Create symlinks inside cmd directory
+- Keep vendor inside cmd directory
+
+Now
+
+- Still go-get-able
+- No conflicts with other projects
+
+It works, even on Windows.
