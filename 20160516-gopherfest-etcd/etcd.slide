@@ -404,13 +404,13 @@ Spell checker
 
 Problem
 
-- etcd client package is used within etcd repo (etcdctl)
-- etcd client imports gRPC and vendors it
-- Project B import this etcd client package
-- Project B also uses gRPC but from different import path
+- etcd "client" package is used within etcd repo (etcdctl)
+- etcd "client" imports "grpc" and vendors it
+- Project B imports this etcd "client" package
+- Project B also uses "grpc" but from different import path
 
 
-Now two projects has conflicting gRPC code [[https://github.com/grpc/grpc-go/issues/566][GH566]]
+Now two projects has conflicting "grpc" code [[https://github.com/grpc/grpc-go/issues/566][GH566]]
 
     panic: http: multiple registrations for /debug/requests
 
