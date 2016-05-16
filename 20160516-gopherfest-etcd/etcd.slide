@@ -37,6 +37,7 @@ Slides are here:
 - Distributed key-value store
 - Open source [[https://github.com/coreos/etcd][github.com/coreos/etcd]] (~ June 2013)
 - Still new, compared to ZooKeeper (~ May 2008)
+- But it's already being used in many projects
 - Google [[http://kubernetes.io/][Kubernetes]], YouTube [[https://github.com/youtube/doorman][Doorman]], ...
 - Red Hat, EMC, Cisco, Huawei, Baidu, Alibaba...
 
