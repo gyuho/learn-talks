@@ -423,7 +423,7 @@ goword understands your Go syntax
 
 - etcd must be easy to use
 - etcd needs good documentation
-- Use godoc to document our client package with code examples
+- Use godoc to document client package with code examples
 - [[https://github.com/coreos/etcd/tree/master/clientv3][etcd/clientv3]]
 
 
