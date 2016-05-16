@@ -77,6 +77,9 @@ For small chunks of data
    DefaultQuotaBytes = int64(2 * 1024 * 1024 * 1024) // 2GB
    MaxQuotaBytes = int64(8 * 1024 * 1024 * 1024)     // 8GB
 
+For JSON, YAML, text data...
+
+Not for ISO image, Videos files...
 
 
 * Updates
