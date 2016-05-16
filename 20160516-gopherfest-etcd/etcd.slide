@@ -127,17 +127,21 @@ Decrement semaphore when rebooting
 
 * CoreOS updates with etcd
 
-- Automatic
-- No downtime
+Increment back when reboot is done
 
 .image img/coreos_update_coordinated_02.png _ 700
 
 
 * CoreOS updates with etcd
 
-Your cluster is now secured
+Do the same thing for other machines
+
+- Automatic
+- No downtime
 
 .image img/coreos_update_coordinated_03.png _ 700
+
+Your cluster is now secured
 
 * Use etcd for "critical" configuration
 
