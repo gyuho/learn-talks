@@ -462,8 +462,12 @@ To update dependency
     ln -s cmd/vendor vendor && godep save
 
 
+* #10 vendor
+
 Still go-get-able.
 
 No conflicts with other projects.
 
 Works, even on Windows!
+
+.image img/etcd_vendor.png _ 300
