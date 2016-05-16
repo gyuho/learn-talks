@@ -35,15 +35,13 @@ Slides are here:
 * etcd is ...
 
 - Distributed key-value store
-- Open source [[https://github.com/coreos/etcd][github.com/coreos/etcd]]
-- Since June 2013
-- Still new (vs ZooKeeper since May 2008)
-- Google, Red Hat, EMC, Cisco, Huawei, Baidu, Alibaba...
-
+- Open source [[https://github.com/coreos/etcd][github.com/coreos/etcd]] (~ June 2013)
+- Still new, compared to ZooKeeper (~ May 2008)
+- Google [[http://kubernetes.io/][Kubernetes]], YouTube [[https://github.com/youtube/doorman][Doorman]], ...
+- Red Hat, EMC, Cisco, Huawei, Baidu, Alibaba...
 
 
 * etcd API
-
 
     cli.Put(ctx, "foo", "bar", Lease)
     cli.Get(ctx, "foo")
@@ -71,6 +69,15 @@ Slides are here:
 
 * Use etcd to store configuration
 
+For small chunks of data
+
+   maxReqBytes = 1.5 * 1024 * 1024  // 1.5MB
+
+   DefaultQuotaBytes = int64(2 * 1024 * 1024 * 1024) // 2GB
+   MaxQuotaBytes = int64(8 * 1024 * 1024 * 1024)     // 8GB
+
+
+
 * Updates
 
 Security updates?
@@ -90,23 +97,24 @@ How would you update the cluster of machines?
 
 * CoreOS updates with etcd
 
-- CoreOS is an open-source Linux OS
-- Automatic, No-downtime updates with etcd
+If you run your application on CoreOS,
+
+your OS gets Automatic, No-downtime updates
 
 .image img/coreos_update.png 250 1000
 
 
 * CoreOS updates with etcd
 
-.image img/coreos_update_coordinated_00.png _ 700
+- CoreOS updates are done by [[https://github.com/coreos/locksmith][locksmith]]
+- locksmith is built on top of etcd
+- locksmith stores semephore values in etcd
+- ensure that only subset of cluster are rebooting at any given time
 
-Powered by etcd and [[https://github.com/coreos/locksmith][github.com/coreos/locksmith]]
+.image img/coreos_update_coordinated_00.png _ 700
 
 
 * CoreOS updates with etcd
-
-- locksmith stores semephore values in etcd
-- ensure that only a subset of a cluster of machines are rebooting at any given time
 
 .image img/coreos_update_coordinated_01.png _ 700
 
@@ -139,7 +147,6 @@ Your cluster is now secured
 
 .image img/etcd_store_configuration_good_00.png _ 700
 
-
 * Good practice
 
 .image img/etcd_store_configuration_good_01.png _ 700
@@ -171,10 +178,7 @@ Watchable
 * Why not ZooKeeper or Consul?
 
 
-* etcd Project Status
-
-
-* etcd Performance
+* etcd Project Status: Performance
 
 * etcd v3
 
@@ -182,7 +186,7 @@ Watchable
 
 - B+tree disk storage
 - Incremental snapshot
-- vs ZooKeeper snapCount 10,000 
+- vs. ZooKeeper snapCount 10,000 
 
 [[http://www.grpc.io/][gRPC]]
 
@@ -208,7 +212,7 @@ Watchable
 .image img/etcd_vs_others_memory.svg _ 900
 
 
-* etcd Reliability
+* etcd Project Status: Reliability
 
 * Throughput
 
@@ -229,26 +233,21 @@ ZooKeeper logs
 
 * etcd Reliability
 
-We test...
+Functional tests [[http://dash.etcd.io/dashboard/db/functional-tests][dash.etcd.io]]
 
-- Kill all members
-- Kill majority of members
+- Kill one/all members
 - Kill leader
 - Network partition
 - Network latency
-- More...
+
+Consistency checking after recovery
+
+>12,000 failure injections per day
+
+>2M injected for etcd v3
 
 
-* etcd Reliability
-
-Intensive failure injection testing
-
-- [[http://dash.etcd.io/dashboard/db/functional-tests][dash.etcd.io]]
-- >12,000 failure injections per day
-- >1.5M injected for etcd v3
-
-
-* etcd Go 10 Tips
+* Go 10 Tips
 
 
 * #1 Use latest Go
@@ -348,6 +347,9 @@ go vet
 
 * #6 Write simple Go
 
+- [[https://github.com/dominikh/go-simple][github.com/dominikh/go-simple]] by Dominik
+- Simplify your Go code
+
    ok := true
    if ok == true {}  // X
    if ok {}          // O
@@ -363,9 +365,6 @@ Don't:
 Do:
 
     return l.newStream()
-
-[[https://github.com/dominikh/go-simple][github.com/dominikh/go-simple]] by Dominik
-
 
 * #7 Check unused
 
@@ -392,12 +391,21 @@ Spell checker
     // Hello retuens.
     func Hello() {}  // Hello retuens. (spell: retuens -> returns?)
 
+goword understands your Go syntax
 
 * #9 Document with godoc
 
 - etcd must be easy to use
 - etcd needs good documentation
-- Example? [[https://github.com/coreos/etcd/tree/master/clientv3][etcd/clientv3]]
+- Use godoc to document our client package with code examples
+- [[https://github.com/coreos/etcd/tree/master/clientv3][etcd/clientv3]]
+
+
+* #10 vendor
+
+etcd use case is complicated...
+
+.image img/godep_conflict.png _ 800
 
 
 * #10 vendor
@@ -423,12 +431,13 @@ Solution [[https://github.com/coreos/etcd/pull/4950][GH4950]]
 - ln -s main.go cmd/main.go
 - cmd/vendor
 
-Update dependency
+To update dependency
 
-- ln -s cmd/vendor vendor
-- godep save
+    ln -s cmd/vendor vendor && godep save
 
 
-Still go-get-able. No conflicts with other projects.
+Still go-get-able.
+
+No conflicts with other projects.
 
 Works, even on Windows!
