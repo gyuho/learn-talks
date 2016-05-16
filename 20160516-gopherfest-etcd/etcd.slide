@@ -92,7 +92,7 @@ How would you update the cluster of machines?
 .image img/coreos_update_uncoordinated_01.png _ 700
 
 - Reboot with downtime
-- Manual
+- Too Manual
 
 
 * CoreOS updates with etcd
@@ -116,6 +116,8 @@ your OS gets Automatic, No-downtime updates
 
 * CoreOS updates with etcd
 
+Decrement semaphore when rebooting
+
 .image img/coreos_update_coordinated_01.png _ 700
 
 
@@ -129,25 +131,39 @@ your OS gets Automatic, No-downtime updates
 
 * CoreOS updates with etcd
 
-.image img/coreos_update_coordinated_03.png _ 700
-
 Your cluster is now secured
+
+.image img/coreos_update_coordinated_03.png _ 700
 
 * Use etcd for "critical" configuration
 
 * Bad practice
 
+What if this machine goes down?
+
 .image img/etcd_store_configuration_bad_00.png _ 700
 
 * Bad practice
+
+Single point of failure
 
 .image img/etcd_store_configuration_bad_01.png _ 700
 
 * Good practice
 
+etcd replicate your data to multiple machine
+
+and still provides consistent view of your data
+
 .image img/etcd_store_configuration_good_00.png _ 700
 
 * Good practice
+
+etcd can tolerate machine failures
+
+Can tolerate up to 1 out of 3-node cluster
+
+Can tolerate up to 2 out of 5-node cluster
 
 .image img/etcd_store_configuration_good_01.png _ 700
 
@@ -176,6 +192,12 @@ Watchable
 
 
 * Why not ZooKeeper or Consul?
+
+They are all great projects.
+
+They have their own use cases.
+
+etcd is built for scalability and reliability.
 
 
 * etcd Project Status: Performance
@@ -272,12 +294,16 @@ Consistency checking after recovery
 
 * #2 Check slice allocation
 
+Go slice capacity decides how much memory to use in the backing array
+
+More capacity means more allocation.
+
+Don't allocate more than you need.
+
 [[https://github.com/coreos/etcd/pull/5238][GH5238]]
 
     s.changes = make([]mvccpb.KeyValue, 0, 128)
     s.changes = make([]mvccpb.KeyValue, 0, 4)    // better for etcd use case
-
-More capacity means more allocation.
 
 Check your use case when making slice!
 
