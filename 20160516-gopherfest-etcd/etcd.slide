@@ -161,7 +161,7 @@ Single point of failure
 
 etcd replicate your data to multiple machine
 
-and still provides consistent view of your data
+and still provides "consistent" view of your data
 
 .image img/etcd_store_configuration_good_00.png _ 700
 
