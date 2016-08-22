@@ -1,3 +1,5 @@
+################################################
+
 etcd: status updates
 Kubernetes Meetup (Bay Area)
 24 Aug 2016
@@ -139,7 +141,8 @@ Use case: rolling upgrade, hardware maintenance, etc.
 * Leadership transfer
 
 - Leader sends *MsgAppend* if transferee log is out-of-date
-- Then leader sends *MsgTimeoutNow* to transferee _(clock-jumping-forward)_
+- Then leader sends *MsgTimeoutNow* to transferee
+- *Fast-forward* transferee's clock to force *election-time-out*
 
 .image img/etcd_leadership_transfer_00.png
 
@@ -149,8 +152,9 @@ Use case: rolling upgrade, hardware maintenance, etc.
 
 * Leadership transfer
 
-- Transferee becomes candidate *without*waiting* _(clock-jumping-forward)_
-- New leader gets elected
+- Now regular Raft leader election
+- Transferee(follower) election-times-out, becomes candidate
+- And gets elected as leader
 
 .image img/etcd_leadership_transfer_01.png
 
@@ -160,8 +164,11 @@ Use case: rolling upgrade, hardware maintenance, etc.
 
 * Leadership transfer
 
-- etcd leader *automatically*transfers*leadership* BEFORE *shutdown*from*SIGINT*
-- This is useful for etcd rolling upgrade
+etcd leader transfer is automatic (all in server side)
+
+- etcd leader receives *SIGINT*, *SIGTERM*
+- etcd leader chooses one most stable follower as transferee
+- etcd leader transfers its leadership to the transferee BEFORE *shutdown*
 
 
 ################################################
@@ -169,7 +176,18 @@ Use case: rolling upgrade, hardware maintenance, etc.
 
 * Leadership transfer
 
-.image img/etcd_leadership_transfer.gif 500 1000
+  osutil: received terminated signal, shutting down...
+
+  etcdserver: "A" starts leadership transfer from "A" to "B"
+  raft: "A" [term 2] starts to transfer leadership to "B"
+  raft: "A" sent MsgTimeoutNow to "B" after received MsgAppResp
+
+  raft: "A" [term: 2] received a MsgVote message with higher term from "B" [term: 3]
+  raft: "A" became follower at term 3
+  raft: "A" [logterm: 2, index: 21139, vote: 0] voted for "B" [logterm: 2, index: 21139] at term 3
+  raft: raft.node: "A" lost leader "A" at term 3
+
+  raft: raft.node: "A" elected leader "B" at term 3
 
 
 ################################################
@@ -201,9 +219,9 @@ Leader goes down *with*leadership*transfer*(v3.1)* + client requests
 
 Total 45 client requests failed since *there*was*no*leader*
 
-*Much*less(30%*less)*errors*
+*Much*less(30%*less)*client*errors* with *minimum*downtime*
 
-*Leadership*transfer*minimizes*downtime*(client*errors)*
+*Better*etcd*rolling*upgrade*experience*
 
 
 ################################################
@@ -243,17 +261,10 @@ We will make it better!
 ################################################
 
 
-* watch progress
-
-TODO
-
-
-################################################
-
-
 * strict reconfiguration
 
 TODO
+https://github.com/coreos/etcd/pull/6106
 
 
 ################################################
@@ -293,9 +304,8 @@ etcd v3.0 vs. *v3.1*(Go*1.7)*
 
 * Better performance
 
-When compared with Zookeeper, Consul
-
 TODO
+When compared with Zookeeper, Consul
 
 
 ################################################
@@ -318,13 +328,13 @@ TODO
 
 _it_is_possible_to_bypass_the_Raft_log_for_read-only_queries_and_still_preserve_linearizability_
 
-- leader records *current*commit*index* in *readIndex*
-- leader sends *readIndex* to followers
-- followers acknowledges *readIndex* as largest commit index ever seen by any server
-- read-request within *readIndex* is now served locally with linearizability
-- more efficient, avoids synchronous disk writes
-
 *(Raft*§6.4*Processing*read-only*queries*more*efficiently,*p.72)*
+
+- Leader records *current*commit*index* in *readIndex*
+- Leader sends *readIndex* to followers
+- For followers, *readIndex* is the largest commit index ever seen by any server
+- Read-request within *readIndex* is now served locally with linearizability
+- More efficient, avoids synchronous disk writes
 
 
 ################################################
@@ -470,13 +480,13 @@ If an etcd fails, recover by creating a new pod
 
 * etcd in Kubernetes
 
-Still experimental, will (soon) be able to
+Still experimental
 
-- creation
-- resize
-- recovery
-- backup
-- rolling upgrade
+- Creation
+- Resize
+- Recovery
+- Backup
+- Rolling upgrade
 
 
 ################################################
