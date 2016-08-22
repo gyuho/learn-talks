@@ -162,10 +162,32 @@ Use case: rolling upgrade, hardware maintenance, etc.
 
 * Leadership transfer
 
-- etcd leader now *automatically*transfers*leadership* when *SIGINT*
+- etcd leader *automatically*transfers*leadership* BEFORE *shutdown*from*SIGINT*
 - This is useful for etcd rolling upgrade
 
-TODO: provide test data
+Rolling upgrade *without*leadership*transfer* (v3.0) + concurrent client requests
+
+  Error distribution:
+    [5]   etcdserver: server stopped
+    [17]  rpc error: code = 13 desc = transport is closing
+    [434] etcdserver: not capable
+    [16] etcdserver: request timed out, possibly due to previous leader failure
+    [14] etcdserver: request timed out
+
+
+################################################
+
+
+* Leadership transfer
+
+Rolling upgrade *with*leadership*transfer*(v3.1)* + concurrent client requests
+
+  Error distribution:
+    [11]  etcdserver: server stopped
+    [17]  rpc error: code = 13 desc = transport is closing
+    [33]  rpc error: code = 13 desc = etcdserver: request timed out, possibly due to previous leader failure
+
+*Leadership*transfer*minimizes*downtime*(client*errors)*
 
 
 ################################################
@@ -197,9 +219,9 @@ We will make it better!
   foo
   bar2
 
-Just one roundtrip to find current, previous value
+*Just*one*roundtrip* to find current, previous value
 
-No need to send another RPC to find the previous value
+*No*need*to*send*another*RPC*to*find*previous*value*
 
 
 ################################################
