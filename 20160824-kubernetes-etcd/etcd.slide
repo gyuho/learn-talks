@@ -177,16 +177,14 @@ Use case: rolling upgrade, hardware maintenance, etc.
 
 * Leadership transfer
 
-Brief leader lost *without*leadership*transfer* (v3.0) + client requests
+Leader goes down *without*leadership*transfer* (v3.0) + client requests
 
   Error distribution:
-    [434] etcdserver: not capable
-    [17]  desc = transport is closing
-    [16]  etcdserver: request timed out, possibly due to previous leader failure
-    [14]  etcdserver: request timed out
-    [5]   etcdserver: server stopped
+    [27]  etcdserver: request timed out, possibly due to previous leader failure
+    [18]  transport is closing
+    [18]  etcdserver: server stopped
  
-Total 486 client requests failed since *there*was*no*leader*
+Total 63 client requests failed since *there*was*no*leader*
 
 
 ################################################
@@ -194,16 +192,16 @@ Total 486 client requests failed since *there*was*no*leader*
 
 * Leadership transfer
 
-Brief leader lost *with*leadership*transfer*(v3.1)* + client requests
+Leader goes down *with*leadership*transfer*(v3.1)* + client requests
 
   Error distribution:
-    [33]  etcdserver: request timed out, possibly due to previous leader failure
-    [17]  transport is closing
-    [11]  etcdserver: server stopped
+    [24] etcdserver: request timed out, possibly due to previous leader failure
+    [18] transport is closing
+    [3]  etcdserver: server stopped
 
-Total 61 client requests failed since *there*was*no*leader*
+Total 45 client requests failed since *there*was*no*leader*
 
-*Much*less(8x*less)*errors*
+*Much*less(30%*less)*errors*
 
 *Leadership*transfer*minimizes*downtime*(client*errors)*
 
@@ -247,7 +245,15 @@ We will make it better!
 
 * watch progress
 
-TODO: add more
+TODO
+
+
+################################################
+
+
+* strict reconfiguration
+
+TODO
 
 
 ################################################
@@ -289,7 +295,7 @@ etcd v3.0 vs. *v3.1*(Go*1.7)*
 
 When compared with Zookeeper, Consul
 
-TODO: provide some benchmark data
+TODO
 
 
 ################################################
@@ -457,6 +463,20 @@ Managed etcd clusters on Kubernetes
 .image img/etcd_in_kubernetes.png
 
 If an etcd fails, recover by creating a new pod
+
+
+################################################
+
+
+* etcd in Kubernetes
+
+Still experimental, will (soon) be able to
+
+- creation
+- resize
+- recovery
+- backup
+- rolling upgrade
 
 
 ################################################
