@@ -121,15 +121,13 @@ Extensive testing (unit, integration, end-to-end)
 
 * Leadership transfer
 
-*What*if*leader*must*step*down?*
-
 Use case: rolling upgrade, hardware maintenance, etc.
 
-*When*leader*steps*down...*
+*What*if*leader*must*step*down?*When*leader*steps*down...*
 
 - Followers lose leader
 - Cluster will be *unavailable* for an election timeout
-- *Unavailable* until another node times out, wins an election
+- *Unavailable* until another node election-times out, wins an election
 - _This_brief_unavailability_ can be avoided with *leadership*transfer*
 
 *(Raft*§3.10*Leadership*transfer*extension,*p.28)*
@@ -141,7 +139,7 @@ Use case: rolling upgrade, hardware maintenance, etc.
 * Leadership transfer
 
 - Leader sends *MsgAppend* if transferee log is out-of-date
-- And then leader sends *MsgTimeoutNow* to transferee
+- Then leader sends *MsgTimeoutNow* to transferee _(clock-jumping-forward)_
 
 .image img/etcd_leadership_transfer_00.png
 
@@ -151,7 +149,7 @@ Use case: rolling upgrade, hardware maintenance, etc.
 
 * Leadership transfer
 
-- Transferee becomes candidate *without*waiting*
+- Transferee becomes candidate *without*waiting* _(clock-jumping-forward)_
 - New leader gets elected
 
 .image img/etcd_leadership_transfer_01.png
@@ -165,14 +163,13 @@ Use case: rolling upgrade, hardware maintenance, etc.
 - etcd leader *automatically*transfers*leadership* BEFORE *shutdown*from*SIGINT*
 - This is useful for etcd rolling upgrade
 
-Rolling upgrade *without*leadership*transfer* (v3.0) + concurrent client requests
 
-  Error distribution:
-    [5]   etcdserver: server stopped
-    [17]  rpc error: code = 13 desc = transport is closing
-    [434] etcdserver: not capable
-    [16] etcdserver: request timed out, possibly due to previous leader failure
-    [14] etcdserver: request timed out
+################################################
+
+
+* Leadership transfer
+
+.image img/etcd_leadership_transfer.gif 500 1000
 
 
 ################################################
@@ -180,12 +177,33 @@ Rolling upgrade *without*leadership*transfer* (v3.0) + concurrent client request
 
 * Leadership transfer
 
-Rolling upgrade *with*leadership*transfer*(v3.1)* + concurrent client requests
+Brief leader lost *without*leadership*transfer* (v3.0) + client requests
 
   Error distribution:
+    [434] etcdserver: not capable
+    [17]  desc = transport is closing
+    [16]  etcdserver: request timed out, possibly due to previous leader failure
+    [14]  etcdserver: request timed out
+    [5]   etcdserver: server stopped
+ 
+Total 486 client requests failed since *there*was*no*leader*
+
+
+################################################
+
+
+* Leadership transfer
+
+Brief leader lost *with*leadership*transfer*(v3.1)* + client requests
+
+  Error distribution:
+    [33]  etcdserver: request timed out, possibly due to previous leader failure
+    [17]  transport is closing
     [11]  etcdserver: server stopped
-    [17]  rpc error: code = 13 desc = transport is closing
-    [33]  rpc error: code = 13 desc = etcdserver: request timed out, possibly due to previous leader failure
+
+Total 61 client requests failed since *there*was*no*leader*
+
+*Much*less(8x*less)*errors*
 
 *Leadership*transfer*minimizes*downtime*(client*errors)*
 
@@ -196,7 +214,7 @@ Rolling upgrade *with*leadership*transfer*(v3.1)* + concurrent client requests
 * Leadership transfer
 
 - Not _"true"_zero-time_ leadership transfer
-- Still brief leader-lost while campaigning
+- Brief leader-lost while campaigning
 
 We will make it better!
 
@@ -222,6 +240,14 @@ We will make it better!
 *Just*one*roundtrip* to find current, previous value
 
 *No*need*to*send*another*RPC*to*find*previous*value*
+
+
+################################################
+
+
+* watch progress
+
+TODO: add more
 
 
 ################################################
