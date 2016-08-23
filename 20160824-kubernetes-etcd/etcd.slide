@@ -107,6 +107,7 @@ Extensive testing (unit, integration, end-to-end)
 - kill members, leader
 - network partition
 - slow network
+- fail points
 
 
 ################################################
@@ -121,18 +122,48 @@ Extensive testing (unit, integration, end-to-end)
 ################################################
 
 
+* Raft leader
+
+- etcd uses Raft consensus algorithm
+- Follower starts election if there's no leader before election-timeout
+
+.image img/etcd_raft_leader_00.png
+
+
+################################################
+
+
+* What if leader must step down?
+
+*No*leader*, so cluster becomes *unavailable*
+
+.image img/etcd_raft_leader_01.png
+
+
+################################################
+
+
+* What if leader must step down?
+
+*No*leader*, so cluster becomes *unavailable*
+Until another node election-times out, wins an election
+
+.image img/etcd_raft_leader_02.png
+
+
+################################################
+
+
 * Leadership transfer
 
-Use case: rolling upgrade, hardware maintenance, etc.
-
-*What*if*leader*must*step*down?*When*leader*steps*down...*
-
-- Followers lose leader
-- Cluster will be *unavailable* for an election timeout
-- *Unavailable* until another node election-times out, wins an election
-- _This_brief_unavailability_ can be avoided with *leadership*transfer*
+_This_brief_unavailability_ can be avoided with *leadership*transfer*
 
 *(Raft*§3.10*Leadership*transfer*extension,*p.28)*
+
+Use case
+
+- Rolling upgrade
+- Maintenance
 
 
 ################################################
@@ -167,61 +198,10 @@ Use case: rolling upgrade, hardware maintenance, etc.
 etcd leader transfer is automatic (all in server side)
 
 - etcd leader receives *SIGINT*, *SIGTERM*
-- etcd leader chooses one most stable follower as transferee
-- etcd leader transfers its leadership to the transferee BEFORE *shutdown*
+- etcd leader *chooses*one*most*stable*follower*as*transferee*
+- etcd leader *transfers*its*leadership* BEFORE *shutdown*
 
-
-################################################
-
-
-* Leadership transfer
-
-  osutil: received terminated signal, shutting down...
-
-  etcdserver: "A" starts leadership transfer from "A" to "B"
-  raft: "A" [term 2] starts to transfer leadership to "B"
-  raft: "A" sent MsgTimeoutNow to "B" after received MsgAppResp
-
-  raft: "A" [term: 2] received a MsgVote message with higher term from "B" [term: 3]
-  raft: "A" became follower at term 3
-  raft: "A" [logterm: 2, index: 21139, vote: 0] voted for "B" [logterm: 2, index: 21139] at term 3
-  raft: raft.node: "A" lost leader "A" at term 3
-
-  raft: raft.node: "A" elected leader "B" at term 3
-
-
-################################################
-
-
-* Leadership transfer
-
-Leader goes down *without*leadership*transfer* (v3.0) + client requests
-
-  Error distribution:
-    [27]  etcdserver: request timed out, possibly due to previous leader failure
-    [18]  transport is closing
-    [18]  etcdserver: server stopped
- 
-Total 63 client requests failed since *there*was*no*leader*
-
-
-################################################
-
-
-* Leadership transfer
-
-Leader goes down *with*leadership*transfer*(v3.1)* + client requests
-
-  Error distribution:
-    [24] etcdserver: request timed out, possibly due to previous leader failure
-    [18] transport is closing
-    [3]  etcdserver: server stopped
-
-Total 45 client requests failed since *there*was*no*leader*
-
-*Much*less(30%*less)*client*errors* with *minimum*downtime*
-
-*Better*etcd*rolling*upgrade*experience*
+*Minimum*downtime*+/-100ms* (vs. 1~2s without leadership transfer)
 
 
 ################################################
@@ -256,15 +236,6 @@ We will make it better!
 *Just*one*roundtrip* to find current, previous value
 
 *No*need*to*send*another*RPC*to*find*previous*value*
-
-
-################################################
-
-
-* strict reconfiguration
-
-TODO
-https://github.com/coreos/etcd/pull/6106
 
 
 ################################################
@@ -311,35 +282,6 @@ When compared with Zookeeper, Consul
 ################################################
 
 
-* Faster linearizable read (QGET)
-
-- Linearizable read (QGET) requires quorum(majority) to agree on the value
-- Serializable read doesn't go through consensus protocol, served locally
-- QGET provides stronger consistency, but slower than serializable read
-- etcd v3.0 QGET QPS 40K <<< serializable-GET 100K
-
-*etcd*v3.1*QGET*is*as*fast*as*serializable*read*(100K)*
-
-
-################################################
-
-
-* Faster linearizable read (QGET)
-
-_it_is_possible_to_bypass_the_Raft_log_for_read-only_queries_and_still_preserve_linearizability_
-
-*(Raft*§6.4*Processing*read-only*queries*more*efficiently,*p.72)*
-
-- Leader records *current*commit*index* in *readIndex*
-- Leader sends *readIndex* to followers
-- For followers, *readIndex* is the largest commit index ever seen by any server
-- Read-request within *readIndex* is now served locally with linearizability
-- More efficient, avoids synchronous disk writes
-
-
-################################################
-
-
 * zetcd
 
 *etcd*has*better*performance*than*Zookeeper*
@@ -360,6 +302,37 @@ Now we can run Kafka, Cassandra, etc. with etcd
 
 - Led by community members; WeStudio, PPMoney, Twitter
 - [[https://github.com/coreos/jetcd][github.com/coreos/jetcd]]
+
+
+################################################
+
+
+* Faster linearizable read (QGET)
+
+- Linearizable read (QGET) requires quorum(majority) to agree on the value
+- Serializable read doesn't go through consensus protocol, served locally
+
+QGET provides stronger consistency, but slower
+
+etcd v3.0 QGET QPS 40K <<< serializable-GET 100K
+
+*etcd*v3.1*QGET*QPS*100K*==*serializable-GET*100K*
+
+
+################################################
+
+
+* Faster linearizable read (QGET)
+
+_it_is_possible_to_bypass_the_Raft_log_for_read-only_queries_and_still_preserve_linearizability_
+
+*(Raft*§6.4*Processing*read-only*queries*more*efficiently,*p.72)*
+
+- Leader records *current*commit*index* in *readIndex*
+- Leader sends *readIndex* to followers
+- For followers, *readIndex* is the largest commit index ever seen by any server
+- Read-request within *readIndex* is now served locally with linearizability
+- More efficient, avoids synchronous disk writes
 
 
 ################################################
@@ -461,32 +434,6 @@ _A_proxy_cache_can_reduce_read_traffic_by_at_most_the_mean_amount_of_read-sharin
 
 - etcd proxy is still in design process
 - need more feedback, use case study
-
-
-################################################
-
-
-* etcd in Kubernetes
-
-Managed etcd clusters on Kubernetes
-
-.image img/etcd_in_kubernetes.png
-
-If an etcd fails, recover by creating a new pod
-
-
-################################################
-
-
-* etcd in Kubernetes
-
-Still experimental
-
-- Creation
-- Resize
-- Recovery
-- Backup
-- Rolling upgrade
 
 
 ################################################
