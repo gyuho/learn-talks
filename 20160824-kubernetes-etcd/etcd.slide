@@ -387,7 +387,7 @@ Not built for performance improvement
 
 etcd v3 clients still talk directly to etcd cluster
 
-.image img/etcd_current_00.png
+.image img/etcd_no_proxy_00.png
 
 
 ################################################
@@ -397,7 +397,7 @@ etcd v3 clients still talk directly to etcd cluster
 
 same WATCH requests
 
-.image img/etcd_current_01.png
+.image img/etcd_no_proxy_01.png
 
 
 ################################################
@@ -407,7 +407,7 @@ same WATCH requests
 
 same WATCH requests
 
-.image img/etcd_current_02.png
+.image img/etcd_no_proxy_02.png
 
 
 ################################################
@@ -417,7 +417,7 @@ same WATCH requests
 
 3 different events are triggered for the same request *(This*is*inefficient!)*
 
-.image img/etcd_current_03.png
+.image img/etcd_no_proxy_03.png
 
 
 ################################################
