@@ -113,7 +113,7 @@ Extensive testing (unit, integration, end-to-end)
 ################################################
 
 
-* New features (v3.1+)
+* Upcoming releases
 
 - v3.1-beta in mid-September
 - GA in October
@@ -122,33 +122,63 @@ Extensive testing (unit, integration, end-to-end)
 ################################################
 
 
-* Raft leader
-
-- etcd uses Raft consensus algorithm
-- Follower starts election if there's no leader before election-timeout
-
-.image img/etcd_raft_leader_00.png
+* What's new in v3.1+?
 
 
 ################################################
 
 
-* What if leader must step down?
-
-*No*leader*, so cluster becomes *unavailable*
-
-.image img/etcd_raft_leader_01.png
+* Raft 101
 
 
 ################################################
 
 
-* What if leader must step down?
+* Raft leader election
+
+- Follower becomes candidate if there's no leader within election-timeout
+
+.image img/raft_leader_election_01.png
+
+
+################################################
+
+
+* Raft leader election
+
+Follower starts election
+
+.image img/raft_leader_election_02.png
+
+
+################################################
+
+
+* Raft leader election
+
+Got votes from majority, then becomes leader
+
+.image img/raft_leader_election_03.png
+
+
+################################################
+
+
+* What if leader goes down?
 
 *No*leader*, so cluster becomes *unavailable*
+
 Until another node election-times out, wins an election
 
-.image img/etcd_raft_leader_02.png
+.image img/raft_leader_down.png
+
+
+################################################
+
+
+* What if leader goes down?
+
+Demo: [[http://play.etcd.io][play.etcd.io]]
 
 
 ################################################
@@ -417,11 +447,12 @@ Merged WATCH request
 
 * Proxy
 
-*(Google*Chubby*paper*§3.1*Proxies,*p.10)*
-
 _so_proxies_allow_a_significant_increase_in_the_number_of_clients_
 
 _A_proxy_cache_can_reduce_read_traffic_by_at_most_the_mean_amount_of_read-sharing_
+
+*(Google*Chubby*paper*§3.1*Proxies,*p.10)*
+
 
 *But*etcd*does*not*have*much*proxy*use*cases*yet!*
 
