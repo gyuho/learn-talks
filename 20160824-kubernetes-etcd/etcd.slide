@@ -269,14 +269,7 @@ etcd v3.0 vs. *v3.1*(Go*1.7)*
 - Linearizable Read QPS 43K vs. *55K*(+20%)*
 - Serializable Read QPS 93K vs. *110K*(+15%)*
 
-
-################################################
-
-
-* Better performance
-
-TODO
-When compared with Zookeeper, Consul
+> Zookeeper v3.4.8 Write QPS _37K_
 
 
 ################################################
