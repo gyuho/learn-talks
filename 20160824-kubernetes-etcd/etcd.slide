@@ -26,9 +26,14 @@ https://github.com/coreos/etcd
 
 * What is etcd
 
-- Distributed key-value store
+- *Distributed*key-value*store*
 - Open source [[https://github.com/coreos/etcd][github.com/coreos/etcd]] (~ June 2013)
 - Still new, compared to ZooKeeper (~ May 2008)
+
+Widely adopted
+
+- Kubernetes, YouTube [[https://github.com/youtube/doorman][Doorman]]
+- Red Hat, EMC, Cisco, Huawei, Baidu, Alibaba
 
 
 ################################################
@@ -36,8 +41,7 @@ https://github.com/coreos/etcd
 
 * etcd + Kubernetes
 
-
-- [[https://github.com/kubernetes/kubernetes][Kubernetes]] manages cluster states in etcd (pkg/storage)
+*Consistent* + *Partition*tolerant* + *(Highly)*Available*
 
 .image img/etcd_kubernetes.png 500 800
 
@@ -190,7 +194,7 @@ _This_brief_unavailability_ can be avoided with *leadership*transfer*
 
 *(Raft*§3.10*Leadership*transfer*extension,*p.28)*
 
-Use case
+Use case (when leader must step down)
 
 - Rolling upgrade
 - Maintenance
@@ -199,7 +203,7 @@ Use case
 ################################################
 
 
-* Leadership transfer
+* Choose transferee
 
 - Leader sends *MsgAppend* if transferee log is out-of-date
 - Then leader sends *MsgTimeoutNow* to transferee
@@ -223,7 +227,7 @@ Use case
 ################################################
 
 
-* Leadership transfer
+* Leadership transfer in etcd
 
 etcd leader transfer is automatic (all in server side)
 
@@ -248,49 +252,6 @@ We will make it better!
 ################################################
 
 
-* --prev-kv flag
-
-  etcdctl put foo bar1
-
-  etcdctl put --prev-kv foo bar2
-  OK
-  foo
-  bar1
-
-  etcdctl watch --prev-kv foo
-  foo
-  bar1
-  foo
-  bar2
-
-*Just*one*roundtrip* to find current, previous value
-
-*No*need*to*send*another*RPC*to*find*previous*value*
-
-
-################################################
-
-
-* Embedded etcd server
-
-  import "github.com/coreos/etcd/embed"
-
-  cfg := embed.NewConfig()
-  cfg.Dir = "default.etcd"
-
-  e, err := embed.StartEtcd(cfg)
-
-  <-e.Err()
-  e.Close()
-
-etcd clients still connects via gRPC
-
-[[https://github.com/coreos/etcd/issues/4709][Embedded client]] planned for v3.2
-
-
-################################################
-
-
 * Better performance
 
 etcd v3.0 vs. *v3.1*(Go*1.7)*
@@ -307,15 +268,16 @@ etcd v3.0 vs. *v3.1*(Go*1.7)*
 
 * zetcd
 
-*etcd*has*better*performance*than*Zookeeper*
+Easiest way to migrate Zookeeper to etcd
 
-*Why*not*serve*Zookeeper*requests*with*etcd?*
+- Just change Zookeeper client endpoints to zetcd
+- Then zetcd handles Zookeeper requests with etcd
+- Provide cross checker for testing, fallback
 
-Forward Zookeeper client requests to zetcd
+Working in progress
 
-And zetcd handles requests, data with etcd
-
-Now we can run Kafka, Cassandra, etc. with etcd
+github.com/chzchzchz/zetcd
+(Will be at github.com/coreos/zetcd)
 
 
 ################################################
@@ -361,6 +323,89 @@ _it_is_possible_to_bypass_the_Raft_log_for_read-only_queries_and_still_preserve_
 ################################################
 
 
+* Proxy
+
+_proxies_allow_a_significant_increase_in_the_number_of_clients_
+
+_A_proxy_cache_can_reduce_read_traffic_by_at_most_the_mean_amount_of_read-sharing_
+
+*(Google*Chubby*paper*§3.1*Proxies,*p.10)*
+
+
+*But*etcd*does*not*have*much*proxy*use*cases*yet!*
+
+- etcd proxy is still in design process
+- need more feedback, use case study
+
+
+################################################
+
+
+* Proxy
+
+- etcd v2 proxy is just HTTP proxy (reverse proxy)
+- etcd v2 proxy doesn't understand gRPC
+
+etcd v3 clients still talk directly to etcd cluster
+
+.image img/etcd_no_proxy_00.png
+
+
+################################################
+
+
+* Proxy use case
+
+same WATCH requests
+
+.image img/etcd_no_proxy_01.png
+
+
+################################################
+
+
+* Proxy use case
+
+same WATCH requests
+
+.image img/etcd_no_proxy_02.png
+
+
+################################################
+
+
+* Proxy use case
+
+3 different events are triggered for the same request *(This*is*inefficient!)*
+
+.image img/etcd_no_proxy_03.png
+
+
+################################################
+
+
+* Proxy use case
+
+etcd v3 proxy solves this problem by *coalescing*same*requests*
+
+.image img/etcd_proxy_00.png
+
+
+################################################
+
+
+* Proxy use case
+
+Merged WATCH request
+
+.image img/etcd_proxy_01.png
+
+*Proxy*does*all*the*hard*work!*
+
+
+################################################
+
+
 * gateway
 
 kube-proxy-like etcd gateway
@@ -380,84 +425,21 @@ Not built for performance improvement
 ################################################
 
 
-* Proxy
+* Embedded etcd server
 
-- etcd v2 proxy is just HTTP proxy (reverse proxy)
-- etcd v2 proxy doesn't understand gRPC
+  import "github.com/coreos/etcd/embed"
 
-etcd v3 clients still talk directly to etcd cluster
+  cfg := embed.NewConfig()
+  cfg.Dir = "default.etcd"
 
-.image img/etcd_no_proxy_00.png
+  e, err := embed.StartEtcd(cfg)
 
+  <-e.Err()
+  e.Close()
 
-################################################
+etcd clients still connects via gRPC
 
-
-* Proxy
-
-same WATCH requests
-
-.image img/etcd_no_proxy_01.png
-
-
-################################################
-
-
-* Proxy
-
-same WATCH requests
-
-.image img/etcd_no_proxy_02.png
-
-
-################################################
-
-
-* Proxy
-
-3 different events are triggered for the same request *(This*is*inefficient!)*
-
-.image img/etcd_no_proxy_03.png
-
-
-################################################
-
-
-* Proxy
-
-etcd v3 proxy solves this problem by *coalescing*same*requests*
-
-.image img/etcd_proxy_00.png
-
-
-################################################
-
-
-* Proxy
-
-Merged WATCH request
-
-.image img/etcd_proxy_01.png
-
-*Proxy*does*all*the*hard*work!*
-
-
-################################################
-
-
-* Proxy
-
-_so_proxies_allow_a_significant_increase_in_the_number_of_clients_
-
-_A_proxy_cache_can_reduce_read_traffic_by_at_most_the_mean_amount_of_read-sharing_
-
-*(Google*Chubby*paper*§3.1*Proxies,*p.10)*
-
-
-*But*etcd*does*not*have*much*proxy*use*cases*yet!*
-
-- etcd proxy is still in design process
-- need more feedback, use case study
+[[https://github.com/coreos/etcd/issues/4709][Embedded client]] planned for v3.2
 
 
 ################################################
