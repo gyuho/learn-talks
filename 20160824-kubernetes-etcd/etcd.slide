@@ -252,7 +252,9 @@ etcd leader transfer is automatic (all in server side)
 - etcd leader *chooses*one*most*stable*follower*as*transferee*
 - etcd leader *transfers*its*leadership* BEFORE *shutdown*
 
-*Minimum*downtime*+/-100ms* (vs. 1~2s without leadership transfer)
+*Minimum*downtime*+/-100ms*
+vs. 1~5s without leadership transfer
+
 
 
 ################################################
@@ -294,7 +296,7 @@ Easiest way to migrate Zookeeper to etcd
 Working in progress
 
 github.com/chzchzchz/zetcd
-(Will be at github.com/coreos/zetcd)
+(Officially at github.com/coreos/zetcd)
 
 
 ################################################
