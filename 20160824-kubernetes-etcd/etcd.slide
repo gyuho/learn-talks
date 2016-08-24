@@ -75,6 +75,23 @@ Widely adopted
 ################################################
 
 
+* Use etcd to store configuration
+
+For small chunks of data
+
+   maxReqBytes = 1.5 * 1024 * 1024  // 1.5MB
+
+   DefaultQuotaBytes = int64(2 * 1024 * 1024 * 1024) // 2GB
+   MaxQuotaBytes = int64(8 * 1024 * 1024 * 1024)     // 8GB
+
+For JSON, YAML, text data...
+
+Not for gigabytes of ISO image, videos files...
+
+
+################################################
+
+
 * Current status (v3.0.x)
 
 - Released  in June 30, 2016
