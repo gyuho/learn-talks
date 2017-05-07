@@ -1,0 +1,91 @@
+################################################
+
+etcd
+May 2017
+
+Gyu-Ho Lee
+CoreOS
+gyu_ho.lee@coreos.com
+https://github.com/coreos/etcd
+
+
+################################################
+
+
+* Agenda
+
+- What is etcd
+- Q/A
+
+
+################################################
+
+
+* What is etcd
+
+- *Distributed*key-value*store*
+- *Consistent* + *Partition*tolerant* + *(Highly)*Available*
+- Open source [[https://github.com/coreos/etcd][github.com/coreos/etcd]] (June 2013 ~)
+- Still new, compared to ZooKeeper (May 2008 ~)
+
+Widely adopted
+
+- Kubernetes, YouTube Doorman, Chain, Blox
+- Red Hat, EMC, Cisco, NTT, Huawei, Baidu, Alibaba
+
+
+################################################
+
+
+* etcd API
+
+  cli.Put(ctx, "foo", "bar", LeaseID)
+  cli.Get(ctx, "foo")
+  cli.Delete(ctx, "foo")
+
+  // Transaction
+  kvc.Txn(ctx).
+    If(clientv3.Compare(clientv3.Value("key"), ">", "abc")). // txn value comparisons are lexical
+    Then(clientv3.OpPut("key", "XYZ")).                      // this runs, since 'xyz' > 'abc'
+    Else(clientv3.OpPut("key", "ABC")).
+    Commit()
+
+  // Watch for updates on key
+  ch := cli.Watch(ctx, "foo")
+  for res := range ch {}
+
+  // Distributed locks
+  mu := concurrency.NewMutex(cli, "foo")
+  mu.Lock()
+  mu.Unlock()
+
+
+################################################
+
+
+* etcd Reliability
+
+Functional tests [[http://dash.etcd.io/dashboard/db/functional-tests][dash.etcd.io]]
+
+- Kill one/all members
+- Kill leader
+- Network partition
+- Network latency
+- Crash tests with fail-points
+
+Consistency checking after recovery
+
+>8,000 failure injections per day (1 failure injection for every 10-second)
+
+>3M injected so far
+
+
+################################################
+
+
+* More?
+
+Fast linearizable reads (quorum lease), Raft leadership transfer, Member configuration (add/remove), Package raft, Package mvcc, TLS reloading, Distributed locks, Leader elections, Barriers, Software transactional memory (STM), Namespace, gRPC naming, gRPC gateway, Embedded etcd, Mirroring, Gateway, etcd operator (monitoring, backups, other operations), Zookeeper emulation (zetcd), Consul emulation (cetcd), etcd testing suites (unit, integration, end-to-end, functional-tester, etcd-runner), Performance testing information (dbtester), etcd playground (play.etcd.io), etc.
+
+
+################################################

@@ -44,7 +44,7 @@ Widely adopted
 
 etcd is *Consistent* + *Partition*tolerant* + *(Highly)*Available*
 
-.image img/etcd_kubernetes.png 500 800
+.image img/etcd-kubernetes.png 500 800
 
 
 ################################################
@@ -64,7 +64,7 @@ etcd is *Consistent* + *Partition*tolerant* + *(Highly)*Available*
     Commit()
 
   // Watch for updates on key
-  ch := cli.Watch(ctx, "foo") 
+  ch := cli.Watch(ctx, "foo")
   for res := range ch {}
 
   // Distributed locks
@@ -160,7 +160,7 @@ Extensive testing (unit, integration, end-to-end)
 
 - Follower becomes candidate if there's no leader within election-timeout
 
-.image img/raft_leader_election_01.png
+.image img/raft-leader-election-01.png
 
 
 ################################################
@@ -170,7 +170,7 @@ Extensive testing (unit, integration, end-to-end)
 
 Follower starts election
 
-.image img/raft_leader_election_02.png
+.image img/raft-leader-election-02.png
 
 
 ################################################
@@ -180,7 +180,7 @@ Follower starts election
 
 Got votes from majority, then becomes leader
 
-.image img/raft_leader_election_03.png
+.image img/raft-leader-election-03.png
 
 
 ################################################
@@ -192,7 +192,7 @@ Got votes from majority, then becomes leader
 
 Until another node election-times out, wins an election
 
-.image img/raft_leader_down.png
+.image img/raft-leader-down.png
 
 
 ################################################
@@ -227,7 +227,7 @@ Use case (when leader must step down)
 - Then leader sends *MsgTimeoutNow* to transferee
 - *Fast-forward* transferee's clock to force *election-time-out*
 
-.image img/etcd_leadership_transfer_00.png
+.image img/etcd-leadership-transfer-00.png
 
 
 ################################################
@@ -239,7 +239,7 @@ Use case (when leader must step down)
 - Transferee(follower) election-times-out, becomes candidate
 - And gets elected as leader
 
-.image img/etcd_leadership_transfer_01.png
+.image img/etcd-leadership-transfer-01.png
 
 
 ################################################
@@ -368,7 +368,7 @@ _A_proxy_cache_can_reduce_read_traffic_by_at_most_the_mean_amount_of_read-sharin
 
 etcd v3 clients still talk directly to etcd cluster
 
-.image img/etcd_no_proxy_00.png
+.image img/etcd-no-proxy-00.png
 
 
 ################################################
@@ -378,7 +378,7 @@ etcd v3 clients still talk directly to etcd cluster
 
 same WATCH requests
 
-.image img/etcd_no_proxy_01.png
+.image img/etcd-no-proxy-01.png
 
 
 ################################################
@@ -388,7 +388,7 @@ same WATCH requests
 
 same WATCH requests
 
-.image img/etcd_no_proxy_02.png
+.image img/etcd-no-proxy-02.png
 
 
 ################################################
@@ -398,7 +398,7 @@ same WATCH requests
 
 3 different events are triggered for the same request *(This*is*inefficient!)*
 
-.image img/etcd_no_proxy_03.png
+.image img/etcd-no-proxy-03.png
 
 
 ################################################
@@ -408,7 +408,7 @@ same WATCH requests
 
 etcd v3 proxy solves this problem by *coalescing*same*requests*
 
-.image img/etcd_proxy_00.png
+.image img/etcd-proxy-00.png
 
 
 ################################################
@@ -418,7 +418,7 @@ etcd v3 proxy solves this problem by *coalescing*same*requests*
 
 Merged WATCH request
 
-.image img/etcd_proxy_01.png
+.image img/etcd-proxy-01.png
 
 *Proxy*does*all*the*hard*work!*
 

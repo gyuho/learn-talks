@@ -54,9 +54,9 @@ Slides are here:
      Then(clientv3.OpPut("key", "XYZ")).                      // this runs, since 'xyz' > 'abc'
      Else(clientv3.OpPut("key", "ABC")).
      Commit()
-    
+
     // Watch for updates on key
-    ch := cli.Watch(ctx, "foo") 
+    ch := cli.Watch(ctx, "foo")
     for res := range ch {}
 
     // Distributed locks
@@ -86,14 +86,14 @@ Not for gigabytes of ISO image, videos files...
 
 Security updates?
 
-.image img/coreos_update_uncoordinated_00.png _ 700
+.image img/coreos-update-uncoordinated-00.png _ 700
 
 How would you update the cluster of machines?
 
 
 * Traditional way
 
-.image img/coreos_update_uncoordinated_01.png _ 700
+.image img/coreos-update-uncoordinated-01.png _ 700
 
 - Reboot with downtime
 - Too Manual
@@ -105,7 +105,7 @@ If you run your application on CoreOS,
 
 your OS gets Automatic, No-downtime updates
 
-.image img/coreos_update.png 250 1000
+.image img/coreos-update.png 250 1000
 
 
 * CoreOS updates with etcd
@@ -115,21 +115,21 @@ your OS gets Automatic, No-downtime updates
 - locksmith stores semephore values in etcd
 - ensure that only subset of cluster are rebooting at any given time
 
-.image img/coreos_update_coordinated_00.png _ 700
+.image img/coreos-update-coordinated-00.png _ 700
 
 
 * CoreOS updates with etcd
 
 Decrement semaphore when rebooting
 
-.image img/coreos_update_coordinated_01.png _ 700
+.image img/coreos-update-coordinated-01.png _ 700
 
 
 * CoreOS updates with etcd
 
 Increment back when reboot is done
 
-.image img/coreos_update_coordinated_02.png _ 700
+.image img/coreos-update-coordinated-02.png _ 700
 
 
 * CoreOS updates with etcd
@@ -139,7 +139,7 @@ Do the same thing for other machines
 - Automatic
 - No downtime
 
-.image img/coreos_update_coordinated_03.png _ 700
+.image img/coreos-update-coordinated-03.png _ 700
 
 Your cluster is now secured
 
@@ -149,13 +149,13 @@ Your cluster is now secured
 
 What if this machine goes down?
 
-.image img/etcd_store_configuration_bad_00.png _ 700
+.image img/etcd-store-configuration-bad-00.png _ 700
 
 * Bad practice
 
 Single point of failure
 
-.image img/etcd_store_configuration_bad_01.png _ 700
+.image img/etcd-store-configuration-bad-01.png _ 700
 
 * Good practice
 
@@ -163,7 +163,7 @@ etcd replicate your data to multiple machine
 
 and still provides "consistent" view of your data
 
-.image img/etcd_store_configuration_good_00.png _ 700
+.image img/etcd-store-configuration-good-00.png _ 700
 
 * Good practice
 
@@ -173,7 +173,7 @@ Can tolerate up to 1 out of 3-node cluster
 
 Can tolerate up to 2 out of 5-node cluster
 
-.image img/etcd_store_configuration_good_01.png _ 700
+.image img/etcd-store-configuration-good-01.png _ 700
 
 
 * Demo
@@ -216,7 +216,7 @@ etcd is built for scalability and reliability.
 
 - B+tree disk storage
 - Incremental snapshot
-- vs. ZooKeeper snapCount 10,000 
+- vs. ZooKeeper snapCount 10,000
 
 [[http://www.grpc.io/][gRPC]]
 
@@ -227,30 +227,30 @@ etcd is built for scalability and reliability.
 
 * Throughput
 
-.image img/etcd_vs_others_throughput.svg _ 900
+.image img/etcd-vs-others-throughput.svg _ 900
 
 * Latency
 
-.image img/etcd_vs_others_latency.svg _ 900
+.image img/etcd-vs-others-latency.svg _ 900
 
 * CPU
 
-.image img/etcd_vs_others_cpu.svg _ 900
+.image img/etcd-vs-others-cpu.svg _ 900
 
 * Memory
 
-.image img/etcd_vs_others_memory.svg _ 900
+.image img/etcd-vs-others-memory.svg _ 900
 
 
 * etcd Project Status: Reliability
 
 * Throughput
 
-.image img/etcd_vs_zk_throughput.svg _ 900
+.image img/etcd-vs-zk-throughput.svg _ 900
 
 * etcd Reliability
 
-.image img/etcd_vs_zk_throughput_comment.png 350 950
+.image img/etcd-vs-zk-throughput-comment.png 350 950
 
 ZooKeeper logs
 
@@ -284,19 +284,19 @@ Consistency checking after recovery
 
 * Throughput
 
-.image img/etcd_go_throughput.svg _ 900
+.image img/etcd-go-throughput.svg _ 900
 
 * Latency
 
-.image img/etcd_go_latency.svg _ 900
+.image img/etcd-go-latency.svg _ 900
 
 * CPU
 
-.image img/etcd_go_cpu.svg _ 900
+.image img/etcd-go-cpu.svg _ 900
 
 * Memory
 
-.image img/etcd_go_memory.svg _ 900
+.image img/etcd-go-memory.svg _ 900
 
 
 
@@ -318,12 +318,12 @@ Check your use case when making slice!
 
 * Throughput
 
-.image img/etcd_slice_optimization_throughput.svg _ 900
+.image img/etcd-slice-optimization-throughput.svg _ 900
 
 
 * Latency
 
-.image img/etcd_slice_optimization_latency.svg _ 900
+.image img/etcd-slice-optimization-latency.svg _ 900
 
 
 
@@ -391,10 +391,10 @@ go vet
 Don't:
 
     err := l.newStream()
-    if err != nil {		
-        return err		
-    }		
-    return nil		
+    if err != nil {
+        return err
+    }
+    return nil
 
 Do:
 
@@ -439,7 +439,7 @@ goword understands your Go syntax
 
 etcd use case is complicated...
 
-.image img/godep_conflict.png _ 800
+.image img/godep-conflict.png _ 800
 
 
 * #10 vendor
@@ -478,4 +478,4 @@ No conflicts with other projects.
 
 Works, even on Windows!
 
-.image img/etcd_vendor.png _ 300
+.image img/etcd-vendor.png _ 300
