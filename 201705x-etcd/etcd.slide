@@ -171,6 +171,8 @@ For writes,
 
 * More?
 
+Things not covered today
+
 Fast linearized reads (quorum lease), Raft leadership transfer, Member configuration (add/remove), Package raft, Package mvcc, TLS reloading, Managing secrets (PGP in etcd), Distributed locks, Leader elections, Barriers, Software transactional memory (STM), Namespace, gRPC naming, gRPC gateway, Embedded etcd, Mirroring, Gateway, Monitoring, etcd operator (backups, automatic membership operations), Java client (jetcd), Zookeeper emulation (zetcd), Consul emulation (cetcd), etcd testing suites (unit, integration, end-to-end, functional-tester, etcd-runner), Performance testing information (dbtester), etcd playground (play.etcd.io), etc.
 
 ################################################
