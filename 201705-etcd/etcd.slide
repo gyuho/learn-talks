@@ -158,8 +158,12 @@ For writes,
 * Monitoring
 
 - Prometheus (metrics), Grafana (dashboard)
-- Leader exists or not, Number of leader changes
-- RPC latencies, F-sync latencies, etc.
+- Leader exists or not
+- Number of leader changes
+- RPC latencies
+- F-sync latencies
+
+And more...
 
 ################################################
 
