@@ -6,6 +6,7 @@ Gyu-Ho Lee
 CoreOS
 https://github.com/coreos/etcd
 
+################################################
 
 * Welcome
 
@@ -13,12 +14,14 @@ Slides are here:
 
 .link https://github.com/gyuho/presentations github.com/gyuho/presentations
 
+################################################
 
 * Go + etcd
 
 .image img/gopherbw.png _ 200
 .image img/etcd-glyph-color.svg _ 200
 
+################################################
 
 * Agenda
 
@@ -27,9 +30,11 @@ Slides are here:
 - Go
 - Q/A
 
+################################################
 
 * What is etcd
 
+################################################
 
 * etcd is ...
 
@@ -40,6 +45,7 @@ Slides are here:
 - Google [[http://kubernetes.io/][Kubernetes]], YouTube [[https://github.com/youtube/doorman][Doorman]], ...
 - Red Hat, EMC, Cisco, Huawei, Baidu, Alibaba...
 
+################################################
 
 * etcd API
 
@@ -63,9 +69,11 @@ Slides are here:
     mu.Lock()
     mu.Unlock()
 
-
+################################################
 
 * Why etcd
+
+################################################
 
 * Use etcd to store configuration
 
@@ -80,6 +88,7 @@ For JSON, YAML, text data...
 
 Not for gigabytes of ISO image, videos files...
 
+################################################
 
 * Updates
 
@@ -89,6 +98,7 @@ Security updates?
 
 How would you update the cluster of machines?
 
+################################################
 
 * Traditional way
 
@@ -97,6 +107,7 @@ How would you update the cluster of machines?
 - Reboot with downtime
 - Too Manual
 
+################################################
 
 * CoreOS updates with etcd
 
@@ -106,6 +117,7 @@ your OS gets Automatic, No-downtime updates
 
 .image img/coreos-update.png 250 1000
 
+################################################
 
 * CoreOS updates with etcd
 
@@ -116,6 +128,7 @@ your OS gets Automatic, No-downtime updates
 
 .image img/coreos-update-coordinated-00.png _ 700
 
+################################################
 
 * CoreOS updates with etcd
 
@@ -123,6 +136,7 @@ Decrement semaphore when rebooting
 
 .image img/coreos-update-coordinated-01.png _ 700
 
+################################################
 
 * CoreOS updates with etcd
 
@@ -130,6 +144,7 @@ Increment back when reboot is done
 
 .image img/coreos-update-coordinated-02.png _ 700
 
+################################################
 
 * CoreOS updates with etcd
 
@@ -142,7 +157,11 @@ Do the same thing for other machines
 
 Your cluster is now secured
 
+################################################
+
 * Use etcd for "critical" configuration
+
+################################################
 
 * Bad practice
 
@@ -150,11 +169,15 @@ What if this machine goes down?
 
 .image img/etcd-store-configuration-bad-00.png _ 700
 
+################################################
+
 * Bad practice
 
 Single point of failure
 
 .image img/etcd-store-configuration-bad-01.png _ 700
+
+################################################
 
 * Good practice
 
@@ -163,6 +186,8 @@ etcd replicate your data to multiple machine
 and still provides "consistent" view of your data
 
 .image img/etcd-store-configuration-good-00.png _ 700
+
+################################################
 
 * Good practice
 
@@ -174,6 +199,7 @@ Can tolerate up to 2 out of 5-node cluster
 
 .image img/etcd-store-configuration-good-01.png _ 700
 
+################################################
 
 * Demo
 
@@ -181,6 +207,7 @@ Can tolerate up to 2 out of 5-node cluster
 
 Join me!
 
+################################################
 
 * etcd
 
@@ -197,6 +224,7 @@ Watchable
 
 - Push configuration updates to application
 
+################################################
 
 * Why not ZooKeeper or Consul?
 
@@ -206,8 +234,11 @@ They have their own use cases.
 
 etcd is built for scalability and reliability.
 
+################################################
 
 * etcd Project Status: Performance
+
+################################################
 
 * etcd v3
 
@@ -223,29 +254,41 @@ etcd is built for scalability and reliability.
 - HTTP/2
 - streams, less TCP congestions
 
+################################################
 
 * Throughput
 
 .image img/etcd-vs-others-throughput.svg _ 900
 
+################################################
+
 * Latency
 
 .image img/etcd-vs-others-latency.svg _ 900
+
+################################################
 
 * CPU
 
 .image img/etcd-vs-others-cpu.svg _ 900
 
+################################################
+
 * Memory
 
 .image img/etcd-vs-others-memory.svg _ 900
 
+################################################
 
 * etcd Project Status: Reliability
+
+################################################
 
 * Throughput
 
 .image img/etcd-vs-zk-throughput.svg _ 900
+
+################################################
 
 * etcd Reliability
 
@@ -259,6 +302,7 @@ ZooKeeper logs
     ...
     07:17:14 [FastLeaderElection@818] - New election...                   // Leader Election
 
+################################################
 
 * etcd Reliability
 
@@ -275,29 +319,39 @@ Consistency checking after recovery
 
 >2M injected for etcd v3
 
+################################################
 
 * Go 10 Tips
 
+################################################
 
 * #1 Use latest Go
+
+################################################
 
 * Throughput
 
 .image img/etcd-go-throughput.svg _ 900
 
+################################################
+
 * Latency
 
 .image img/etcd-go-latency.svg _ 900
+
+################################################
 
 * CPU
 
 .image img/etcd-go-cpu.svg _ 900
 
+################################################
+
 * Memory
 
 .image img/etcd-go-memory.svg _ 900
 
-
+################################################
 
 * #2 Check slice allocation
 
@@ -314,17 +368,19 @@ Don't allocate more than you need.
 
 Check your use case when making slice!
 
+################################################
 
 * Throughput
 
 .image img/etcd-slice-optimization-throughput.svg _ 900
 
+################################################
 
 * Latency
 
 .image img/etcd-slice-optimization-latency.svg _ 900
 
-
+################################################
 
 * #3 Test your code
 
@@ -342,6 +398,7 @@ Use expect package for e2e tests
 
 [[https://godoc.org/github.com/coreos/etcd/pkg/expect][github.com/coreos/etcd/pkg/expect]]
 
+################################################
 
 * #4 Check goroutine leaks
 
@@ -366,6 +423,7 @@ Scan runtime.Stack
 
 Highly recommend for projects with context.Context, gRPC
 
+################################################
 
 * #5 Always gofmt, go vet
 
@@ -377,6 +435,7 @@ go vet
 	log.Fatalf("hello %d", "a")
 	// arg "a" for printf verb %d of wrong type: string
 
+################################################
 
 * #6 Write simple Go
 
@@ -399,6 +458,8 @@ Do:
 
     return l.newStream()
 
+################################################
+
 * #7 Check unused
 
 - [[https://github.com/dominikh/go-unused][github.com/dominikh/go-unused]] by Dominik
@@ -409,6 +470,7 @@ Do:
 
 Found bugs in etcd [[https://github.com/coreos/etcd/pull/4995/files][GH4955]]
 
+################################################
 
 * #8 Use goword
 
@@ -426,6 +488,8 @@ Spell checker
 
 goword understands your Go syntax
 
+################################################
+
 * #9 Document with godoc
 
 - etcd must be easy to use
@@ -433,6 +497,7 @@ goword understands your Go syntax
 - Use godoc to document client package with code examples
 - [[https://github.com/coreos/etcd/tree/master/clientv3][etcd/clientv3]]
 
+################################################
 
 * #10 vendor
 
@@ -440,6 +505,7 @@ etcd use case is complicated...
 
 .image img/godep-conflict.png _ 800
 
+################################################
 
 * #10 vendor
 
@@ -455,6 +521,7 @@ Now two projects has conflicting "grpc" code [[https://github.com/grpc/grpc-go/i
 
     panic: http: multiple registrations for /debug/requests
 
+################################################
 
 * #10 vendor
 
@@ -468,6 +535,7 @@ To update dependency
 
     ln -s cmd/vendor vendor && godep save
 
+################################################
 
 * #10 vendor
 
@@ -478,3 +546,5 @@ No conflicts with other projects.
 Works, even on Windows!
 
 .image img/etcd-vendor.png _ 300
+
+################################################

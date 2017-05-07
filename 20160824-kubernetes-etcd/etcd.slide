@@ -8,9 +8,7 @@ Gyu-Ho Lee
 CoreOS
 https://github.com/coreos/etcd
 
-
 ################################################
-
 
 * Agenda
 
@@ -19,9 +17,7 @@ https://github.com/coreos/etcd
 - New features (v3.1+)
 - Q/A
 
-
 ################################################
-
 
 * What is etcd
 
@@ -35,9 +31,7 @@ Widely adopted
 - Kubernetes, YouTube [[https://github.com/youtube/doorman][Doorman]]
 - Red Hat, EMC, Cisco, Huawei, Baidu, Alibaba
 
-
 ################################################
-
 
 * etcd + Kubernetes
 
@@ -45,9 +39,7 @@ etcd is *Consistent* + *Partition*tolerant* + *(Highly)*Available*
 
 .image img/etcd-kubernetes.png 500 800
 
-
 ################################################
-
 
 * etcd API
 
@@ -71,9 +63,7 @@ etcd is *Consistent* + *Partition*tolerant* + *(Highly)*Available*
   mu.Lock()
   mu.Unlock()
 
-
 ################################################
-
 
 * Use etcd to store configuration
 
@@ -88,18 +78,14 @@ For JSON, YAML, text data...
 
 Not for gigabytes of ISO image, videos files...
 
-
 ################################################
-
 
 * Current status (v3.0.x)
 
 - Released in June 30, 2016
 - Latest v3.0.6
 
-
 ################################################
-
 
 * Current status (v3.0.x)
 
@@ -111,9 +97,7 @@ Not for gigabytes of ISO image, videos files...
 
 *v3.1*will*be*even*faster*
 
-
 ################################################
-
 
 * Current status (v3.0.x)
 
@@ -133,27 +117,20 @@ Extensive testing (unit, integration, end-to-end)
 
 ################################################
 
-
 * Upcoming releases
 
 - v3.1-beta in mid-September
 - GA in October
 
-
 ################################################
-
 
 * What's new in v3.1+?
 
-
 ################################################
-
 
 * Raft 101
 
-
 ################################################
-
 
 * Raft leader election
 
@@ -161,9 +138,7 @@ Extensive testing (unit, integration, end-to-end)
 
 .image img/raft-leader-election-01.png
 
-
 ################################################
-
 
 * Raft leader election
 
@@ -171,9 +146,7 @@ Follower starts election
 
 .image img/raft-leader-election-02.png
 
-
 ################################################
-
 
 * Raft leader election
 
@@ -181,9 +154,7 @@ Got votes from majority, then becomes leader
 
 .image img/raft-leader-election-03.png
 
-
 ################################################
-
 
 * What if leader goes down?
 
@@ -193,17 +164,13 @@ Until another node election-times out, wins an election
 
 .image img/raft-leader-down.png
 
-
 ################################################
-
 
 * What if leader goes down?
 
 Demo: [[http://play.etcd.io][play.etcd.io]]
 
-
 ################################################
-
 
 * Leadership transfer
 
@@ -216,9 +183,7 @@ Use case (when leader must step down)
 - Rolling upgrade
 - Maintenance
 
-
 ################################################
-
 
 * Choose transferee
 
@@ -228,9 +193,7 @@ Use case (when leader must step down)
 
 .image img/etcd-leadership-transfer-00.png
 
-
 ################################################
-
 
 * Leadership transfer
 
@@ -240,9 +203,7 @@ Use case (when leader must step down)
 
 .image img/etcd-leadership-transfer-01.png
 
-
 ################################################
-
 
 * Leadership transfer in etcd
 
@@ -255,10 +216,7 @@ etcd leader transfer is automatic (all in server side)
 *Minimum*downtime*+/-100ms*
 vs. 1~5s without leadership transfer
 
-
-
 ################################################
-
 
 * Leadership transfer
 
@@ -267,9 +225,7 @@ vs. 1~5s without leadership transfer
 
 We will make it better!
 
-
 ################################################
-
 
 * Better performance
 
@@ -281,9 +237,7 @@ etcd v3.0 vs. *v3.1*(Go*1.7)*
 
 > Zookeeper v3.4.8 Write QPS _37K_
 
-
 ################################################
-
 
 * zetcd
 
@@ -298,18 +252,14 @@ Working in progress
 github.com/chzchzchz/zetcd
 (Officially at github.com/coreos/zetcd)
 
-
 ################################################
-
 
 * Java client
 
 - Led by community members; WeStudio, PPMoney, Twitter
 - [[https://github.com/coreos/jetcd][github.com/coreos/jetcd]]
 
-
 ################################################
-
 
 * Faster linearizable read (QGET)
 
@@ -322,9 +272,7 @@ etcd v3.0 QGET QPS 40K <<< Serializable-GET 100K
 
 *etcd*v3.1*QGET*QPS*100K*==*Serializable-GET*100K*
 
-
 ################################################
-
 
 * Faster linearizable read (QGET)
 
@@ -338,9 +286,7 @@ _it_is_possible_to_bypass_the_Raft_log_for_read-only_queries_and_still_preserve_
 - Read-request within *readIndex* is now served locally with linearizability
 - More efficient, avoids synchronous disk writes
 
-
 ################################################
-
 
 * Proxy
 
@@ -350,15 +296,12 @@ _A_proxy_cache_can_reduce_read_traffic_by_at_most_the_mean_amount_of_read-sharin
 
 *(Google*Chubby*paper*§3.1*Proxies,*p.10)*
 
-
 *But*etcd*does*not*have*much*proxy*use*cases*yet!*
 
 - etcd proxy is still in design process
 - need more feedback, use case study
 
-
 ################################################
-
 
 * Proxy
 
@@ -369,9 +312,7 @@ etcd v3 clients still talk directly to etcd cluster
 
 .image img/etcd-no-proxy-00.png
 
-
 ################################################
-
 
 * Proxy use case
 
@@ -379,9 +320,7 @@ same WATCH requests
 
 .image img/etcd-no-proxy-01.png
 
-
 ################################################
-
 
 * Proxy use case
 
@@ -389,9 +328,7 @@ same WATCH requests
 
 .image img/etcd-no-proxy-02.png
 
-
 ################################################
-
 
 * Proxy use case
 
@@ -399,9 +336,7 @@ same WATCH requests
 
 .image img/etcd-no-proxy-03.png
 
-
 ################################################
-
 
 * Proxy use case
 
@@ -409,9 +344,7 @@ etcd v3 proxy solves this problem by *coalescing*same*requests*
 
 .image img/etcd-proxy-00.png
 
-
 ################################################
-
 
 * Proxy use case
 
@@ -421,9 +354,7 @@ Merged WATCH request
 
 *Proxy*does*all*the*hard*work!*
 
-
 ################################################
-
 
 * gateway
 
@@ -440,9 +371,7 @@ Static endpoint for client requests
 
 Not built for performance improvement
 
-
 ################################################
-
 
 * Embedded etcd server
 
@@ -459,6 +388,5 @@ Not built for performance improvement
 etcd clients still connects via gRPC
 
 [[https://github.com/coreos/etcd/issues/4709][Embedded client]] planned for v3.2
-
 
 ################################################
