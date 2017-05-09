@@ -1,7 +1,7 @@
 ################################################
 
 etcd
-May 2017
+8 May 2017
 
 Gyu-Ho Lee
 https://github.com/coreos/etcd
@@ -10,11 +10,12 @@ https://github.com/coreos/etcd
 
 * Agenda
 
-- What is etcd
-- How etcd works
-- How to operate etcd
-- etcd Performance
-- Q/A
+- Overview
+- Architecture
+- API
+- Use cases
+- Operation
+- Performance and testing
 
 ################################################
 
@@ -152,6 +153,14 @@ For writes,
 - Low latency
 - Tight bounds
 - Predictable performance
+
+################################################
+
+* etcd is reliable, and fast
+
+For reads,
+
+TODO
 
 ################################################
 
