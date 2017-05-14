@@ -34,8 +34,9 @@ Widely adopted
 
 * etcd is distributed
 
-- Distributed (typically 3 to 5 nodes)
+- Distributed (typically 3 or 5 nodes)
 - *Consistent* + *Partition*tolerant* + *(Highly)*Available*, in CAP theorem
+- String,Sequential Consistency (NOT eventual consistency)
 - Consensus over Raft
 
 ################################################
@@ -77,12 +78,23 @@ Manually requested by client
 
 ################################################
 
-* Connection model
+* RPC
 
 - gRPC, HTTP/2, Protocol Buffer
 - Unary RPC (one-shot request)
 - Streaming RPC
 - Multiplexing requests
+
+Zookeeper
+
+- Long-live session
+- FIFO response ordering
+
+################################################
+
+* Network Usage
+
+TODO
 
 ################################################
 
@@ -159,6 +171,18 @@ For writes,
 * etcd is reliable, and fast
 
 For reads,
+
+TODO
+
+################################################
+
+* etcd is efficient (CPU)
+
+TODO
+
+################################################
+
+* etcd is efficient (Memory)
 
 TODO
 
