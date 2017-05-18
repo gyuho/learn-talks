@@ -36,7 +36,7 @@ Widely adopted
 
 - Distributed (typically 3 or 5 nodes)
 - *Consistent* + *Partition*tolerant* + *(Highly)*Available*, in CAP theorem
-- String,Sequential Consistency (NOT eventual consistency)
+- String(Sequential) Consistency (NOT eventual consistency)
 - Consensus over Raft
 
 ################################################
@@ -94,7 +94,7 @@ Zookeeper
 
 * Network Usage
 
-TODO
+.image img/2017Q2-01-write-1M-network-traffic-throughput.png _ 1000
 
 ################################################
 
@@ -162,9 +162,10 @@ Consistency checking after recovery
 
 For writes,
 
-- Low latency
-- Tight bounds
+- Low latency (tight bounds)
 - Predictable performance
+
+.image img/2017Q2-01-write-1M-latency-best-throughput.png _ 750
 
 ################################################
 
@@ -172,19 +173,19 @@ For writes,
 
 For reads,
 
-TODO
+.image img/2017Q2-01-read-3M-latency-1000-clients.png _ 900
 
 ################################################
 
 * etcd is efficient (CPU)
 
-TODO
+.image img/2017Q2-01-write-1M-cpu-client-scaling.png _ 900
 
 ################################################
 
 * etcd is efficient (Memory)
 
-TODO
+.image img/2017Q2-01-write-1M-memory-by-key-best-throughput.png _ 900
 
 ################################################
 
