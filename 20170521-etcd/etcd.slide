@@ -1,7 +1,6 @@
 ################################################
 
 etcd
-22 May 2017
 
 Gyu-Ho Lee
 https://github.com/coreos/etcd
@@ -28,7 +27,7 @@ https://github.com/coreos/etcd
 Widely adopted
 
 - Kubernetes, YouTube Doorman, Chain, AWS Blox
-- Red Hat, EMC, Cisco, NTT, Huawei, Baidu, Alibaba
+- Snapchat, Red Hat, EMC, Cisco, NTT, Huawei, Baidu, Alibaba
 
 ################################################
 
