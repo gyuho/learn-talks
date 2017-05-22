@@ -54,9 +54,9 @@ Widely adopted
 
 * Backend database (B-, B+ tree)
 
+- Retains historical key revisions (MVCC)
 - In-memory B- tree indexes keys to revision
 - On-disk B+ tree indexes revisions to key-value data (BoltDB)
-- Retains historical key revisions (MVCC)
 
 ################################################
 
