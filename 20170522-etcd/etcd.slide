@@ -43,9 +43,9 @@ Widely adopted
 * Write-ahead log (WAL)
 
 - Storage layer for Raft entries in Protocol Buffer (encoded blobs)
-- Rolling checksum (CRC32)
 - Pre-allocated 64 MB segments
 - Buffered writes
+- Rolling checksum (CRC32)
 - Prevent/Recover write tears or data corruptions
 
 .image img/etcd-wal.png _ 1000
