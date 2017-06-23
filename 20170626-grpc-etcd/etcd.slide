@@ -185,13 +185,13 @@ Zookeeper
 
 * CPU Usage
 
-TODO
+.image img/2017Q2-01-write-1M-cpu-client-scaling.png _ 1000
 
 ################################################
 
 * Network Usage
 
-.image img/2017Q2-02-write-1M-network-traffic-throughput.png _ 1000
+.image img/2017Q2-02-write-1M-network-traffic-best-throughput.png _ 1000
 
 ################################################
 
@@ -199,12 +199,12 @@ TODO
 
 TCP connections: 100 vs. 1,000
 
-TODO
+.image img/2017Q2-01-write-1M-throughput-client-scaling.png _ 1000
 
 ################################################
 
 * Latency
 
-TODO
+.image img/2017Q2-02-write-1M-latency-best-throughput.png _ 1000
 
 ################################################
