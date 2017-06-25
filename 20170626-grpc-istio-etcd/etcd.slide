@@ -23,8 +23,14 @@ https://github.com/coreos/etcd
 
 Widely adopted
 
-- Kubernetes, OpenStack
+- Kubernetes, OpenStack, [[https://github.com/istio/galley/issues/20][Istio/gallery]]
 - Red Hat, Baidu, Alibaba, Huawei, Yandex, EMC, Cisco, NTT
+
+################################################
+
+* etcd as Istio/gallery storage backend
+
+.image img/istio-gallery-etcd.png _ 800
 
 ################################################
 
@@ -118,10 +124,12 @@ In active development
 
 * use case: grpc-gateway
 
-[[https://github.com/grpc-ecosystem/grpc-gateway][grpc-gateway]] for HTTP endpoints
+"Experimental" [[https://github.com/grpc-ecosystem/grpc-gateway][grpc-gateway]] for HTTP endpoints
 
+  # gRPC with HTTT/2 + Protocol Buffer
   etcdctl watch foo
 
+  # HTTT/1 + JSON
   curl -L http://localhost:2379/v3alpha/watch \
     -X POST -d ''{"create_request": {"key":"Zm9v"} }'
 
