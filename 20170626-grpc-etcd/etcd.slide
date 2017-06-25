@@ -120,6 +120,8 @@ In active development
 
 [[https://github.com/grpc-ecosystem/grpc-gateway][grpc-gateway]] for HTTP endpoints
 
+  etcdctl watch foo
+
   curl -L http://localhost:2379/v3alpha/watch \
     -X POST -d ''{"create_request": {"key":"Zm9v"} }'
 
