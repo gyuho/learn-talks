@@ -182,8 +182,8 @@ Scale out (not by adding more nodes)
 
 - gRPC, HTTP/2, Protocol Buffer
 - Unary RPC (one-shot request)
-- Stream RPC
-- Multiplex requests in single TCP connection
+- Streaming RPC
+- Multiplex requests/streams in single TCP connection
 
 Zookeeper
 
