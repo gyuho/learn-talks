@@ -1,0 +1,365 @@
+################################################
+
+etcd
+
+Gyuho Lee
+https://github.com/coreos/etcd
+
+################################################
+
+* Agenda
+
+- Overview
+- Architecture
+- Performance
+- Testing
+- Operation
+- Roadmap
+
+################################################
+
+* What is etcd
+
+- *Distributed*key-value*store*
+- Open source [[https://github.com/coreos/etcd][github.com/coreos/etcd]] (June 2013 ~)
+- vs. ZooKeeper (May 2008 ~)
+
+Widely adopted
+
+- *Kubernetes*, OpenStack
+- Alibaba, Baidu, Yandex, NTT, Uber, Huawei, Cisco, EMC, IBM
+- Many more...
+
+################################################
+
+* etcd + Kubernetes
+
+.image img/etcd-kubernetes.png 500 800
+
+################################################
+
+* etcd is distributed
+
+- Distributed (typically 3 or 5 nodes)
+- *Consistent* + *Partition*tolerant* + *(Highly)*Available*, in CAP theorem
+- Strong(Sequential) Consistency (NOT eventual consistency)
+- Consensus over Raft
+
+################################################
+
+* Unary RPCs
+
+One-shot request
+
+  cli.Put(ctx, "foo", "bar", LeaseID)
+  cli.Get(ctx, "foo")
+  cli.Delete(ctx, "foo")
+
+  // Transaction
+  kvc.Txn(ctx).
+    If(clientv3.Compare(clientv3.Value("key"), ">", "abc")). // txn value comparisons are lexical
+    Then(clientv3.OpPut("key", "XYZ")).                      // this runs, since 'xyz' > 'abc'
+    Else(clientv3.OpPut("key", "ABC")).
+    Commit()
+
+  // Distributed locks
+  mu := concurrency.NewMutex(cli, "foo")
+  mu.Lock()
+  mu.Unlock()
+
+################################################
+
+* Streaming RPCs
+
+  // Watch for updates on key
+  ch := cli.Watch(ctx, "foo")
+  for res := range ch {}
+
+  // Bi-directional stream
+  service Watch
+    rpc Watch(stream WatchRequest) returns (stream WatchResponse)
+
+  // Uni-directional stream
+  service Election
+    rpc Observe(LeaderRequest) returns (stream LeaderResponse)
+
+################################################
+
+* gRPC gateway
+
+[[https://github.com/grpc-ecosystem/grpc-gateway][grpc-gateway]] for HTTP endpoints
+
+  # gRPC with HTTT/2 + Protocol Buffer
+  etcdctl watch foo
+
+  # HTTT/1 + JSON
+  curl -L http://localhost:2379/v3/watch \
+    -X POST -d '{"create_request": {"key":"Zm9v"} }'
+
+################################################
+
+* Architecture
+
+################################################
+
+* Server: Replication Protocol
+
+- etcd uses Raft, similar to Paxos
+- Leader-based distributed consensus algorithm
+- *Consistent* + *Partition*tolerant* + *(Highly)*Available*, in CAP theorem
+- Strong(Sequential) Consistency (NOT eventual consistency)
+- Client requests are forwarded to leader, automatically
+
+Most popular Raft implementation [[https://godoc.org/github.com/coreos/etcd/raft][etcd/raft]]
+
+################################################
+
+* Server: Write-ahead log (WAL)
+
+- Storage layer for Raft entries in Protocol Buffer (encoded blobs)
+- Pre-allocated 64 MB segments
+- Buffered writes
+- Rolling checksum (CRC32)
+- Prevent/Recover write tears or data corruptions
+
+.image img/etcd-wal.png _ 900
+
+################################################
+
+* Server: Backend database (B-, B+ tree)
+
+- After replicated(committed) through Raft
+- User requests applier
+- Retains historical key revisions (MVCC)
+- In-memory B- tree, to map keys to revision
+- On-disk B+ tree, to map revisions to key-value data
+
+.image img/etcd-mvcc.png _ 600
+
+################################################
+
+* Client
+
+Client Balancer and Error handler implement failover/retry
+
+.image img/etcd-client-balancer.png _ 900
+
+- Critical to HA Kubernetes cluster
+- Handles network faults/partitions
+
+################################################
+
+* Networking
+
+Server-to-Server, Server-to-Client, Client-to-Server
+
+- gRPC, HTTP/2, Protocol Buffer
+- Unary RPC (one-shot request)
+- Stream RPC
+- Multiplex requests in single TCP connection
+
+Zookeeper
+
+- Jute
+- Creates Long-live session
+- Requires FIFO response ordering
+
+################################################
+
+* Performance
+
+################################################
+
+* Network Usage
+
+.image img/etcd-network-usage.png _ 1000
+
+################################################
+
+* Memory/Disk Usage
+
+.image img/etcd-memory-disk-usage.png _ 1000
+
+################################################
+
+* Throughput/Latency
+
+[[https://github.com/coreos/dbtester/tree/master/test-results/2018Q1-02-etcd-zookeeper-consul][Write 1-million 256-byte key, 1KB value pairs]]
+
+Average Throughput
+- etcd: 35K QPS
+- Zookeeper: 16K QPS
+- Consul: 5K QPS
+
+Latency p99.9
+- etcd: 97 ms
+- Zookeeper: 2526.87 ms
+- Consul: 3499.23 ms
+
+Read throughput >100K QPS
+
+################################################
+
+* Testing
+
+- Unit, Integration, end-to-end
+- Failure injection testing
+
+>12,000 failure injections per day
+
+>5M injected for etcd v3
+
+- kill members, leader
+- network partition
+- slow network
+- trigger snapshot
+- fail points
+
+################################################
+
+* Operating etcd
+
+################################################
+
+* v3 migration
+
+Transform v2 keys to v3
+
+  etcdctl migrate --data-dir="default.etcd" --wal-dir="default.etcd/member/wal"
+
+*Warning!* Does not create new Raft entries on migrated data!
+
+[[https://github.com/coreos/etcd/issues/8804][Won't be replicated to newly added member!]]
+
+.image img/etcd-migrate-issue.png _ 750
+
+################################################
+
+* Snapshot/Backup
+
+Automatically in server-side
+
+- Automatic snapshot for every snapshot-count write, compact old Raft logs
+- Leader sends snapshots to "slow" followers
+
+  etcd --snapshot-count 100000
+
+(Default value is 100000, from v3.2)
+
+Manually requested by client
+
+- Manual snapshot, point-in-time backup of a cluster
+- Create a *new* *cluster* and imports data from the snapshot
+
+  etcdctl snapshot save
+  etcdctl snapshot restore
+
+################################################
+
+* Reconfiguration
+
+  etcdctl member remove 40aeba1745b9a28a
+  etcdctl member add s4 --peer-urls=http://localhost:4380
+  etcd --initial-cluster s4=https://localhost:4380,... --initial-cluster-state existing
+
+Unhealthy member? Always [[https://github.com/coreos/etcd/blob/master/Documentation/faq.md#should-i-add-a-member-before-removing-an-unhealthy-member][*remove* *first*]] and then add a new member
+
+New member may be misconfigured or incapable of joining the cluster
+
+################################################
+
+* Reconfiguration
+
+  etcd --strict-reconfig-check
+
+to reject reconfiguration requests that would cause quorum loss
+
+(e.g. add a member to 2-node cluster when one of the existing nodes is unavailable)
+
+################################################
+
+* Maintenance
+
+- Compact to discard historical key-value data
+- Defrag to reclaim disk space
+
+  etcdctl compaction 10
+  etcdctl --endpoints=localhost:2379 defrag
+  etcdctl --endpoints=localhost:22379 defrag
+  etcdctl --endpoints=localhost:32379 defrag
+
+Compaction request is replicated/applied by Raft!
+Defragmentation is local; thus need be requested to each node!
+
+################################################
+
+* Upgrade
+
+Make sure to read [[https://github.com/coreos/etcd/tree/master/Documentation/upgrades][Upgrade guides]] and [[https://github.com/coreos/etcd/blob/master/CHANGELOG-3.4.md][CHANGELOG]]
+
+- Release policy: maintain last two release branches
+- Bug fixes are backported to 3.2 and 3.3 during 3.4 release cycle
+
+v3.2
+
+- Improved client balancer for HA cluster (Kubernetes v1.10)
+- Critical bug fixes in backend storage (watch, Bolt DB)
+- Support advanced TLS authentication (reverse lookup on wildcard DNS names, etc.)
+
+v3.3
+
+- Improved client balancer (same as v3.2)
+- Backend database [[https://github.com/coreos/etcd/issues/8009][write amplification fix]] (disabled freelist sync)
+- Boot/Runtime corruption checking
+
+################################################
+
+* Monitoring
+
+- Prometheus (metrics), Grafana (dashboard)
+- Leader exists or not
+- Number of leader changes
+- RPC latencies
+- F-sync latencies (WAL, DB sync)
+- Database size
+
+  curl -L http://localhost:2379/metrics
+
+v3.3 supports additional metrics endpoints
+
+  etcd --listen-metrics-urls=https://localhost:2378,http://localhost:9379
+  curl -L http://localhost:9379/metrics
+
+################################################
+
+* etcd Operator
+
+Manages etcd clusters deployed to Kubernetes with automation
+
+- Create and destroy
+- Resize
+- Failover
+- Rolling upgrade
+- Backup and restore
+
+Run etcd on top of Kubernetes for other applications on Kubernetes
+(e.g. Vault operator runs on top of Kubernetes using etcd operator)
+
+*etcd* *operator* for another *Kubernetes* *cluster* is *experimental* (not recommended)
+
+Self-hosted etcd gets hit by issues that are outside of its control
+but *failure* can be *catastrophic* as etcd is the "brain" of Kubernetes!
+
+################################################
+
+* Roadmap
+
+- Improve client balancer
+- Raft pre-vote; more robust leader election protocol
+- Raft learner; non-disruptive observer node
+- v2 API emulaton, backed by v3 storage
+- Improve storage read concurrency
+- Customize TLS cipher suites
+- gRPC Proxy
+
+################################################
