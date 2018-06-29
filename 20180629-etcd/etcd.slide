@@ -1,0 +1,1003 @@
+################################################
+
+etcd
+
+Gyuho Lee
+https://github.com/coreos/etcd
+
+################################################
+
+* Slides
+
+- [[https://talks.godoc.org/github.com/gyuho/presentations/20180629-etcd/etcd.slide#1][github.com/gyuho/presentations]]
+- [[https://talks.godoc.org/github.com/gyuho/presentations/20180629-etcd/etcd.slide#1][talks.godoc.org/github.com/gyuho/presentations/20180629-etcd/etcd.slide#1]]
+
+################################################
+
+* Agenda
+
+- Session 1: What is etcd? How does etcd work?
+- Session 2: What makes etcd unavailable?
+- Session 3: How to fix and debug etcd?
+- Session 4: How to monitor etcd?
+
+################################################
+
+* Things not covered (today)
+
+- Client
+- Performance
+- Security
+- Authentication
+- Backend storage
+- Testing
+- Tuning
+- v2 API
+
+Visit [[https://github.com/coreos/etcd][github.com/coreos/etcd]] for more docs!
+
+################################################
+
+* Session 1: What is etcd? How does etcd work?
+
+################################################
+
+* What is etcd
+
+- *Distributed*key-value*store*
+- Open source [[https://github.com/coreos/etcd][github.com/coreos/etcd]] (June 2013 ~)
+- vs. [[https://zookeeper.apache.org/][ZooKeeper]] (May 2008 ~)
+- vs. Google [[https://ai.google/research/pubs/pub27897][Chubby]] (2006 ~)
+
+Widely adopted
+
+- *Kubernetes*, OpenStack
+- Alibaba, Baidu, Yandex, NTT, Uber, Huawei, Cisco, EMC, IBM
+- Many more...
+
+################################################
+
+* etcd + Kubernetes
+
+.image img/etcd-kubernetes.png 500 800
+
+################################################
+
+* etcd is distributed
+
+- Distributed (typically 3 or 5 nodes)
+- *Consistent* + *Partition*tolerant* + *(Highly)*Available*, in CAP theorem
+- Strong(Sequential) Consistency (NOT eventual consistency)
+- Consensus over Raft
+
+################################################
+
+* Unary RPCs
+
+One-shot request
+
+  cli.Put(ctx, "foo", "bar", LeaseID)
+  cli.Get(ctx, "foo")
+  cli.Delete(ctx, "foo")
+
+  // Transaction
+  kvc.Txn(ctx).
+    If(clientv3.Compare(clientv3.Value("key"), ">", "abc")). // txn value comparisons are lexical
+    Then(clientv3.OpPut("key", "XYZ")).                      // this runs, since 'xyz' > 'abc'
+    Else(clientv3.OpPut("key", "ABC")).
+    Commit()
+
+  // Distributed locks
+  mu := concurrency.NewMutex(cli, "foo")
+  mu.Lock()
+  mu.Unlock()
+
+################################################
+
+* Streaming RPCs
+
+  // Watch for updates on key
+  ch := cli.Watch(ctx, "foo")
+  for res := range ch {}
+
+  // Bi-directional stream
+  service Watch
+    rpc Watch(stream WatchRequest) returns (stream WatchResponse)
+
+  // Uni-directional stream
+  service Election
+    rpc Observe(LeaderRequest) returns (stream LeaderResponse)
+
+################################################
+
+* etcd Data Workflow
+
+################################################
+
+* Server Replication Protocol
+
+- etcd uses [[https://raft.github.io/][Raft]], similar to Paxos
+- Leader-based distributed consensus algorithm
+- *Consistent* + *Partition*tolerant* + *(Highly)*Available*, in CAP theorem
+- Strong(Sequential) Consistency (NOT eventual consistency)
+- Client requests are forwarded to leader, automatically
+
+Most popular Raft implementation [[https://godoc.org/github.com/coreos/etcd/raft][etcd/raft]].
+
+################################################
+
+* Server Raft Log Storage: Write-ahead log (WAL)
+
+- Storage layer for Raft entries in Protocol Buffer (encoded blobs)
+- Pre-allocated 64 MB segments
+- Buffered writes
+- Rolling checksum (CRC32)
+- Prevent/Recover write tears or data corruptions
+
+.image img/etcd-wal.png _ 900
+
+################################################
+
+* Server Application Data Store
+
+- After replicated(committed) through Raft
+- User requests applier
+- Retains historical key revisions (MVCC)
+- In-memory B- tree, to map keys to revision
+- On-disk B+ tree, to map revisions to key-value data
+
+.image img/etcd-mvcc.png _ 600
+
+################################################
+
+* etcd Raft Workflow: Leader Election
+
+################################################
+
+* Create 3-node etcd cluster...
+
+- Node A
+- Node B
+- Node C
+- Every node begins as a follower state
+- Raft is a leader-based protocol
+- Every request must be processed via leader
+- No leader == Cluster outage
+
+################################################
+
+* Follower A election times out...
+
+No heartbeat from an active leader, thus [[https://github.com/coreos/etcd/blob/8f6348a97d483316c5039d6bbc2f66ba2c00e1d0/raft/raft.go#L614-L622][election time-out]] elapses
+
+  func (r *raft) tickElection() {
+    r.electionElapsed++
+
+    if r.promotable() && r.pastElectionTimeout() {
+      r.electionElapsed = 0
+      r.Step(pb.Message{From: r.id, Type: pb.MsgHup})
+    }
+  }
+
+################################################
+
+* Follower A becomes (pre) candidate...
+
+MsgHup is sent to the local node, and [[https://github.com/coreos/etcd/blob/8f6348a97d483316c5039d6bbc2f66ba2c00e1d0/raft/raft.go#L845-L862][start an leader election]]!
+
+  func (r *raft) Step(m pb.Message) error {
+    switch m.Type {
+    case pb.MsgHup:
+      if r.state != StateLeader {
+        ...
+        if r.preVote {
+          r.campaign(campaignPreElection)
+        } else {
+          r.campaign(campaignElection)
+        }
+
+When leader election begins, candidate increments its term
+
+################################################
+
+* (Now) Candidate A requests vote to become leader...
+
+Candidate first votes for itself, and [[https://github.com/coreos/etcd/blob/eb0a10da8a3f5ae887494fa0e3cdfd908bdab8f2/raft/raft.go#L709-L745][sends MsgVote to peers]]
+
+  func (r *raft) campaign(t CampaignType) {
+    r.becomeCandidate()
+    for id := range r.prs {
+      if id == r.id {
+        continue
+      }
+      r.send(pb.Message{Term: term, To: id, Type: pb.MsgVote, Index: r.raftLog.lastIndex(), ...})
+
+################################################
+
+* Node B and C respond to message vote from A...
+
+Followers [[https://github.com/coreos/etcd/blob/8f6348a97d483316c5039d6bbc2f66ba2c00e1d0/raft/raft.go#L867-L881][vote for candidate]], if candidate's logs are more up-to-date
+
+  func (r *raft) Step(m pb.Message) error {
+    switch m.Type {
+    case pb.MsgVote:
+      canVote := ...
+      if canVote && r.raftLog.isUpToDate(m.Index, m.LogTerm) {
+        r.send(pb.Message{To: m.From, Term: m.Term, Type: pb.MsgVoteResp})
+
+################################################
+
+* Candidate A receives vote responses...
+
+Candidate [[https://github.com/coreos/etcd/blob/8f6348a97d483316c5039d6bbc2f66ba2c00e1d0/raft/raft.go#L1121-L1161][becomes the leader]], on receiving votes from majority
+
+  func stepCandidate(r *raft, m pb.Message) error {
+    switch m.Type {
+      case pb.MsgVoteResp:
+        gr := r.poll(m.From, m.Type, !m.Reject)
+        if r.quorum() == gr {
+          r.becomeLeader()
+          r.bcastAppend()
+        } else if r.quorum == len(r.votes) - gr {
+          r.becomeFollower(r.Term, None)
+        }
+
+################################################
+
+* How to ensure safety, recency guarantees?
+
+- Only 1 leader, all messages are forwarded to leader
+- Randomize timeouts to avoid split votes
+
+Compare log index and term:
+
+- Reject vote requests with smaller "term"
+- Only vote if the candidate's log is more up-to-date
+
+Ensures leader always contain latest logs.
+
+See [[https://github.com/coreos/etcd/blob/8f6348a97d483316c5039d6bbc2f66ba2c00e1d0/raft/raft.go#L770-L806][raft.go/Step]] for more!
+
+################################################
+
+* Recap: Leader Election
+
+- Each node begins as follower
+- Election times out
+- Follower becomes candidate to start an election
+- Candidate requests votes
+- Candidate receives votes from majority, becomes leader
+
+Voting process ensures candidate wins, iff its log contains all committed entries.
+
+################################################
+
+* etcd Raft Workflow: Log Replication
+
+################################################
+
+* Requests go to leader...
+
+Key-value updates and membership changes are [[https://github.com/coreos/etcd/blob/8f6348a97d483316c5039d6bbc2f66ba2c00e1d0/raft/node.go#L420-L422][encoded as MsgProp]]
+
+  func (n *node) Propose(ctx context.Context, data []byte) error {
+    return n.stepWait(ctx, pb.Message{Type: pb.MsgProp, Entries: ...)
+  }
+
+  func (n *node) ProposeConfChange(ctx context.Context, cc pb.ConfChange) error {
+    return n.Step(ctx, pb.Message{Type: pb.MsgProp, Entries: ...)
+  }
+
+And, MsgProp will forwarded to leader automatically
+
+  func stepLeader(r *raft, m pb.Message) error {
+    switch m.Type {
+    case pb.MsgProp:
+      r.appendEntry(m.Entries...)
+      r.bcastAppend()
+      return nil
+
+################################################
+
+* Leader A sends logs to Follower B and C...
+
+Now leader [[https://github.com/coreos/etcd/blob/8f6348a97d483316c5039d6bbc2f66ba2c00e1d0/raft/raft.go#L443-L453][replicates logs]] to followers
+
+  func (r *raft) sendAppend(to uint64) {
+    // leader tracks follower progress
+    pr := r.getProgress(to)
+
+	term, errt := r.raftLog.term(pr.Next - 1)
+	ents, erre := r.raftLog.entries(pr.Next, r.maxMsgSize)
+
+Leader sends MsgApp
+
+  if errt == nil && erre == nil {
+    m.Type = pb.MsgApp
+
+Or, sends MsgSnap
+
+  // requested logs are compacted in leader's log
+  if errt != nil || erre != nil {
+    m.Type = pb.MsgSnap
+
+################################################
+
+* Leader and Follower persist log entries to WAL...
+
+[[https://github.com/coreos/etcd/blob/8f6348a97d483316c5039d6bbc2f66ba2c00e1d0/etcdserver/raft.go#L241-L248][Persist entries]] to WAL storage
+
+  if err := r.storage.Save(rd.HardState, rd.Entries); err != nil {
+    r.lg.Fatal("failed to save Raft hard state and entries", zap.Error(err))
+
+And mark these entries as committed, once persisted in majority.
+
+Entries will never be applied unless they are committed!
+
+################################################
+
+* Leader and Follower apply "committed" log entries...
+
+Only afte committed, server [[https://github.com/coreos/etcd/blob/8f6348a97d483316c5039d6bbc2f66ba2c00e1d0/etcdserver/raft.go#L218-L228][applies these commands]]
+
+  ap := apply{entries: rd.CommittedEntries, ...}
+  r.applyc <- ap
+
+################################################
+
+* Recap: Log Replication
+
+- Client requests are sent to leader as MsgProp
+- Leader keeps track of replication progress of each follower
+- Leader runs periodic log compaction to discard old logs
+- Leader sends MsgApp to follower for log replication
+- Leader sends MsgSnap to follower, if it lags behind last compaction
+- Once entry is replicated and persisted in quorum, mark it as "committed"
+- Applier applies only committed entries
+
+To configure log compaction
+
+  etcd --snapshot-count 100000
+
+################################################
+
+* Transport Layer
+
+- HTTP streaming for Raft layer
+- gRPC unary and stream for v3 RPC
+- Push vs. Polling
+- Lease KeepAlive for HTTP, bypass WAL
+
+################################################
+
+* Session 1 End
+
+################################################
+
+* Session 2: What makes etcd unavailable?
+
+################################################
+
+* Leader Election Effects
+
+Cluster outage:
+
+- Cluster becomes unavailable when leader election happens
+- Serializable read can still be served (local read)
+
+Kubernetes API server --etcd-quorum-read would fail:
+
+- --etcd-quorum-read default true
+- --etcd-quorum-read is being deprecated (true by default)
+
+etcd Watch client may get stuck with one node:
+
+- Kubelet gets no updates
+
+################################################
+
+* Cause #1. Machine Restart
+
+- Restart leader node machine
+- Cluster loses leader
+- *Cluster*becomes*unavailable*until*new*leader*
+
+Tips
+
+- Leadership transfer
+- --initial-election-tick-advance=false
+
+################################################
+
+* Cause #2. Quorum Loss
+
+Leader sends MsgCheckQuorum locally, to check quorum activeness
+
+- Leader becomes isolated
+- Or, followers fail thus unreachable
+- Or, followers are too slow
+- Leader finds out quorum is not active, steps down to follower
+- *Cluster*becomes*unavailable*until*new*leader*
+
+################################################
+
+* Cause #3. Network Partition
+
+- Follower A becomes isolated (network partition)
+- Follower A keeps triggering election until it elects a new leader
+- Follower A ends up with higher term than current leader
+
+What would happen when follower A regains its connectivity?
+
+- Follower with higher term *forces*current*leader*to*step*down*
+- *Cluster*becomes*unavailable*until*new*leader*
+- Disruption is inevitable in order to free this stuck node with fresh election
+
+Tips
+
+- Pre-vote, to increment term only if it can win election
+- Pre-vote improves the robustness of leader election in general
+
+################################################
+
+* Cause #4. Slow Network
+
+- Leader heartbeats drop or delay
+- Follower election times out and starts election
+- *Cluster*becomes*unavailable*until*new*leader*
+
+################################################
+
+* Cause #5. Overloaded Cluster
+
+- MsgProp may be dropped and retried when sending/receiving buffer is full
+- Leader heartbeats drop
+- Follower election times out and starts election
+- *Cluster*becomes*unavailable*until*new*leader*
+
+Notes
+
+- Writer and Reader do not block each other
+- Long running read transaction may hold pages for longer (larger freelist size)
+
+################################################
+
+* Cause #6. Large Mean Time to Recovery (MTTR)
+
+- Recovery happens during restart or snapshot restore
+- Recover backend database states from disk
+- Need rebuild in-memory index
+- Recovery may take long time (> 10-sec for 10 GB db file)
+- During recovery, the node is unavailable
+- Only recoverying node is not available, not necessarily the whole cluster
+
+################################################
+
+* Cause #7. Large Snapshot Send/Receive?
+
+- Follower falls behind leader's last compact index
+- Leader sends snapshot to slow follower
+- Snapshot send is asynchronous but may consume much network capacity
+- When follower receives snapshot, it persists on disk
+- Loading snapshot may take long time
+
+What if snapshot send and receive take too long?
+
+- Increase Mean-Time-To-Recovery
+- Slow followers may livelock waiting for snapshot receive
+
+Snapshot send/receive should not take more than 30-sec!
+
+################################################
+
+* Cause #8. Slow Disk
+
+- etcd is sensitive to disk write latency
+- Writes Raft logs (WAL)
+- Fsync MVCC Storage
+- QPS depends on hardware and workload (see [[https://github.com/coreos/etcd/blob/master/Documentation/op-guide/hardware.md#disks][Hardware Requirement]])
+- Slow Raft log write may trigger leader election
+- *Cluster*becomes*unavailable*until*new*leader*
+
+################################################
+
+* Cause #9. Misconfiguration
+
+- Be careful with [[https://github.com/coreos/etcd/blob/master/Documentation/tuning.md][Tuning]]
+- Too small timeouts for slow hardware can trigger leader elections
+- Too small timeouts for cross-region can trigger leader elections
+- Too large timeouts may lead to cluster inconsistency
+- Too small --snapshot-count can trigger frequent leader snapshots
+- Too large --snapshot-count can trigger RAM usage spikes (Go runs GC)
+
+################################################
+
+* Cause #10. Membership Reconfiguration
+
+- Membership change request is applied the same way as regular request
+- Member add/remove is in effect, right after apply succeeds
+- Then cluster changes quorum size, even before the new member starts
+- Thus, member add may trigger leader election
+- If current leader ran compaction, leader need send snapshot to new member
+- Server waits until membership reconfiguration completes
+- Other peers may election timeout waiting for membership reconfiguration apply
+
+Tips
+
+- Member add increases quorum size, thus cluster losing leader
+- Always remove unhealthy first!
+- Raft Learner
+
+################################################
+
+* Cause #11. Compact?
+
+- etcd MVCC backend storage allows one write tx, many read tx
+- Readers and Writers do not block each other
+- But, storage compaction "does" block readers, writers, hash check, snapshot
+- Requests may timeout during compaction
+- But, not necessarily affect whole cluster availability
+
+Tips
+
+- Use auto compaction, if you need not retain historical data
+- Compact discards old versioned key-value data, but does not reclaim disk space
+
+  etcd --auto-compaction-retention '1h'
+  etcdctl compaction 100
+
+################################################
+
+* Cause #12. Defragment?
+
+  etcdctl defrag
+
+- etcd backend storage is memory-mapped
+- Compaction does not reclaim disk space
+- Defragment to reclaim disk space
+- Readers and Writers do not block each other
+- But, storage defragment "does" block readers, writers, hash check, snapshot
+- Requests may timeout during defragmentation
+- But, not necessarily affect whole cluster availability
+
+Tips
+
+- Test defragment performance before using it in production
+- Non-blocking defragment
+
+################################################
+
+* Cause #13. Snapshot?
+
+  etcdctl snapshot save backup.db
+
+- Snapshot is read-only transaction
+- Won't affect any cluster availability
+- Snapshot fetch may be blocked by compact or defragment operation
+
+Tips
+
+- Snapshot download request is local, not necessarily sent to leader
+- Use endpoint status command to find out leader node
+- Download snapshot from leader node
+
+################################################
+
+* Cause #14. Database Quota?
+
+  etcd --quota-backend-bytes '0'
+
+- Default database size limit is 2 GB
+- Quota exceed raises cluster-wide alarm, to block writes
+- Kubernetes API server requests fail except reads
+- Alarms must be disarmed before restart with larger limits
+
+Tips
+
+- Test database size before increasing limits
+
+################################################
+
+* Cause #15. ENOSPACE
+
+What if local machine ran out of space?
+
+Unfortunately, etcd does not handle this gracefully.
+
+Server may crash or lose data.
+
+################################################
+
+* Cause #16. Data Corruption
+
+- WAL keeps rolling CRC, to detect data corruption
+- Snapshot fetch keeps SHA256, for integrity checks
+- etcd v3 provides Hash API to return storage digests
+- etcd --experimental-initial-corrupt-check 'true'
+- etcd --experimental-corrupt-check-time '1h'
+
+What if someone secretly modifies existing db file?
+
+Periodic corrupt check will detect but cannot prevent!
+
+Paxos and Raft only handles Non-Byzantine faults.
+
+################################################
+
+* Cause #17. Expired TLS Certificates
+
+Overwrite TLS Certificates in place, without restart.
+
+etcd reloads TLS Certificates for every TLS handshake.
+
+################################################
+
+* Q. How does etcd team test this?
+
+We simulate all of them, and many more.
+
+See [[https://github.com/coreos/etcd/tree/master/functional][etcd Functional Testing]] and [[https://godoc.org/github.com/coreos/etcd/functional/rpcpb#Case][Failure Cases]].
+
+################################################
+
+* Session 2 End
+
+################################################
+
+* Session 3: How to fix and debug etcd?
+
+################################################
+
+* Disaster #1. Running on slow disks?
+
+Look at metrics to confirm
+
+  $ curl -L http://localhost:2379/metrics | grep slow
+
+  # HELP total number of slow apply requests (likely overloaded from slow disk).
+  # TYPE etcd_server_slow_apply_total counter
+  etcd_server_slow_apply_total 2
+
+Check fsync latency histograms
+
+  $ curl -L http://localhost:2379/metrics | grep fsync
+
+  etcd_disk_wal_fsync_duration_seconds_bucket{le="8.192"} 4
+  etcd_snap_fsync_duration_seconds_bucket{le="8.192"} 0
+
+And upgrade to better disks.
+
+################################################
+
+* Disaster #2. Under network partition?
+
+What happens when there is network partition?
+
+- Watch streams may get stuck with partitioned node, thus no updates
+- v3.1 etcd client retries on the partitioned node, indefinite
+- v3.2+ etcd client failover to other nodes (use latest Kubernetes API server)
+- Peer connection will fail
+
+  # Node 8211f1d0f64f3269 fails
+
+  # TYPE etcd_network_disconnected_peers_total counter
+  etcd_network_disconnected_peers_total{Local="91bc3c398fb3c146",Remote="8211f1d0f64f3269"} 1
+
+  # TYPE etcd_network_peer_sent_failures_total counter
+  etcd_network_peer_sent_failures_total{To="8211f1d0f64f3269"} 571
+
+Partitioned node, even as follower, can trigger disruptive elections with higher term.
+
+If network partition repeats, replace the node with a new one.
+
+################################################
+
+* Disaster #3. DB file size is growing too big?
+
+etcd <= v3.2 persists freelist to reuse free pages on restart.
+
+This can lead to [[https://github.com/coreos/etcd/issues/8009]["database space exceeded" issue]].
+
+Latest v3.2 disables freelist sync, and its database size remains more static.
+
+################################################
+
+* Disaster #4. Alarm is raised?
+
+  etcdctl alarm list
+  etcdctl alarm disarm
+
+- Database size quota exceeded
+- Database hash mismatch found
+
+Confident etcd can handle more data?
+
+- Reconfigure "--quota-backend-bytes" value, and restart
+
+(Should never happen but) Hash mismatch?
+
+- Remember which node was leader
+- Stop all cluster operations
+- Inspect DB file to find mismatching entry
+- Recreate cluster with leader DB file
+
+################################################
+
+* Disaster #5. Forgot to download or lost snapshot?
+
+And 2 out of 3-node cluster are completely gone...
+
+How to recover?
+
+- Find db file, and make a copy
+
+  $ find default.etcd/
+  ...
+  default.etcd/member/snap/db
+
+- Restore snapshot ignoring hash check
+
+  $ etcdctl snapshot restore copy.db --skip-hash-check
+
+- Recreate cluster from seed member
+
+################################################
+
+* Tip #1. Always use latest release
+
+- All critical bug fixes are backported
+- Use the latest patch release
+- Make sure to read upgrade guide for breaking changes
+
+Notes
+
+- Upgrade is done one by one
+- Use leadership transfer to minimize downtime
+
+################################################
+
+* Tip #2. Monitor etcd
+
+- Do not rely on warning logs
+- Use Prometheus [[https://github.com/coreos/etcd/blob/master/Documentation/op-guide/etcd3_alert.rules.yml][alert rules]]
+- Use "etcd --listen-metrics-urls" to serve metrics data in a separate URL
+
+################################################
+
+* Tip #3. Snapshot from leader
+
+- Snapshot fetch is requested to a local node
+- When given multiple endpoints, client balancer may choose stale node
+- Make sure to send snapshot request to leader node
+
+  etcdctl endpoint status
+  etcdctl --endpoints=[LEADER-NODE] snapshot save backup.db
+
+Same applies to defragmentation, need run for each node
+
+  etcdctl --endpoints=[NODE-A] defrag
+  etcdctl --endpoints=[NODE-B] defrag
+  etcdctl --endpoints=[NODE-C] defrag
+
+################################################
+
+* Tip #4. etcd-dump-db
+
+Inspect application data offline?
+
+  go install -v ./tools/etcd-dump-db
+
+  etcd-dump-db list-bucket ./default.etcd/
+  etcd-dump-db iterate-bucket ./default.etcd/ key
+  etcd-dump-db iterate-bucket ./default.etcd/ key --decode
+
+################################################
+
+* Tip #5. etcd-dump-logs
+
+Inspect low-level Raft logs?
+
+  go install -v ./tools/etcd-dump-logs
+
+  etcd-dump-logs ./default.etcd/
+  etcd-dump-logs --entry-type IRRPut default.etcd/
+  etcd-dump-logs --stream-decoder decoder_correctoutputformat.sh  /tmp/datadir
+
+This can decode Kubernetes objects
+
+- Check out author's [[https://www.youtube.com/watch?v=WQoxyb1o9Y4][demo]]
+- Check out Kubernetes decoder [[https://github.com/jpbetz/auger][jpbetz/auger]]
+
+################################################
+
+* Tip #6. Go pprof
+
+Excessive memory or CPU usage by etcd process?
+
+Use Go runtime profiler to debug:
+
+  etcd --enable-pprof
+
+  go tool pprof -seconds=30 http://[HOST]:2379/debug/pprof/heap
+  go tool pprof -seconds=30 http://[HOST]:2379/debug/pprof/profile
+
+  go tool pprof -pdf etcd ./pprof/pprof.HOST.pb.gz > ~/a.pdf
+
+################################################
+
+* Tip #7. Benchmark CLI
+
+Check etcd performance?
+
+  go install -v ./tools/benchmark
+
+  # 50 MB
+  benchmark --conns=100 --clients=1000 put --key-size=8 --val-size=256 --total=200000
+
+  # 700 MB
+  benchmark --conns=1000 --clients=1000 put --key-size=8 --val-size=256 --total=2000000
+
+More advanced benchmark? Please check out [[https://github.com/coreos/dbtester][dbtester]].
+
+################################################
+
+* Session 3 End
+
+################################################
+
+* Session 4: How to monitor etcd?
+
+################################################
+
+* Prometheus
+
+- etcd uses Prometheus for collecting metrics
+- Expose per-RPC metrics (v3 gRPC APIs)
+- Use "etcd --listen-metrics-urls" to serve metrics data in a separate URL
+
+  # start etcd server
+  etcd
+
+  # one the same node, expose metrics
+  go get -v github.com/prometheus/node_exporter
+  node_exporter -web.listen-address=":9101"
+
+  # Prometheus instance
+  prometheus \
+    --config.file monitor.yaml \
+    --web.listen-address localhost:9902 \
+    --storage.tsdb.path /var/log/monitor.data
+
+Check out sample [[https://github.com/coreos/etcd/blob/master/Documentation/op-guide/grafana.json][Grafana dashboard template]]!
+
+################################################
+
+* Leadership Metrics
+
+  $ curl -L http://localhost:2379/metrics | grep leader
+
+  etcd_server_has_leader 1
+  etcd_server_is_leader 1
+  etcd_server_leader_changes_seen_total 1
+
+Must alert if etcd_server_leader_changes_seen_total goes higher
+
+################################################
+
+* fsync latency WAL
+
+WAL fsync takes too long, then likely leader election happens
+
+  etcd_disk_wal_fsync_duration_seconds_bucket{le="4.096"} 4
+  etcd_disk_wal_fsync_duration_seconds_bucket{le="8.192"} 4
+
+Configure a separate WAL directory, if needed
+
+  etcd --wal-dir [PATH]
+
+################################################
+
+* fsync latency MVCC
+
+Backend commit takes too long, then likely requests may time out
+
+  etcd_disk_backend_commit_duration_seconds_bucket{le="4.096"} 6
+  etcd_disk_backend_commit_duration_seconds_bucket{le="8.192"} 6
+
+Snapshot fsync takes too long, likely due to slow, degraded disk
+
+  etcd_snap_fsync_duration_seconds_bucket{le="4.096"} 0
+  etcd_snap_fsync_duration_seconds_bucket{le="8.192"} 0
+
+################################################
+
+* Slow Network
+
+etcd Probing routine monitors peer-to-peer RTT
+
+  etcd_network_peer_round_trip_time_seconds_bucket{To="91bc3c398fb3c146",le="1.6384"} 1
+  etcd_network_peer_round_trip_time_seconds_bucket{To="91bc3c398fb3c146",le="3.2768"} 1
+
+Slow round-trip time can lead to leader elections
+
+################################################
+
+* Slow Request Processing
+
+Slow CPU or overloaded cluster may be found via
+
+  etcd_server_slow_apply_total 0
+
+It warns if apply takes more than 100 ms.
+
+If requests take too long, Kubernetes API server may time out.
+
+################################################
+
+* Slow Compaction
+
+Compact operation blocks read and write:
+
+  etcd_debugging_mvcc_db_compaction_pause_duration_milliseconds_bucket{le="4096"} 0
+  etcd_debugging_mvcc_db_compaction_pause_duration_milliseconds_bucket{le="+Inf"} 0
+
+If compaction takes too long, requests may time out.
+
+################################################
+
+* Slow Defragment
+
+Defragment operation blocks read and write:
+
+  etcd_disk_backend_defrag_duration_seconds_bucket{le="204.8"} 0
+  etcd_disk_backend_defrag_duration_seconds_bucket{le="409.6"} 0
+
+If defragment takes too long, requests may time out.
+
+################################################
+
+* Slow Snapshot Transfer
+
+Snapshot send takes too long, if the snapshot data is too large:
+
+  etcd_disk_backend_snapshot_duration_seconds_bucket{le="327.68"} 0
+  etcd_disk_backend_snapshot_duration_seconds_bucket{le="655.36"} 0
+
+Double-check the database size.
+
+Sending large snapshot files may use all network capacity.
+
+################################################
+
+* DB Size
+
+etcd backend storage use mmap
+
+  # current quota size
+  etcd_server_quota_backend_bytes 2.147483648e+09
+
+  # physically allocated DB size
+  etcd_mvcc_db_total_size_in_bytes 20480
+
+  # actual DB size in use, if run defragment right now
+  etcd_mvcc_db_total_size_in_use_in_bytes 16384
+
+Notes
+
+- etcd backend storage initialize mmap size to 10 GB
+- Unused space in DB is not mapped into physical RAM
+- In "top" command, monitor "RES", not "VIRT"
+
+################################################
+
+* Session 4 End
+
+################################################
+
+* Useful Links
+
+- We are [[https://etcd.readthedocs.io/en/latest/?badge=latest][rewriting docs]].
+- Read [[https://github.com/coreos/etcd/blob/master/Documentation/faq.md][FAQ]].
+- Quick etcd setup? Check out [[http://play.etcd.io/install][play.etcd.io/install]].
+
+################################################
