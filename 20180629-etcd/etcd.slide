@@ -363,10 +363,12 @@ To configure log compaction
 
 * Transport Layer
 
-- HTTP streaming for Raft layer
-- gRPC unary and stream for v3 RPC
-- Push vs. Polling
-- Lease KeepAlive for HTTP, bypass WAL
+- HTTP/1 + Protocol Buffer between Raft peers
+- HTTP/2 + gRPC + Protocol Buffer between v3 client and server
+- No enforced response ordering
+- Server pushes watch event via stream (vs. polling)
+- Stream multiplexing
+- Watch requires no session
 
 ################################################
 
