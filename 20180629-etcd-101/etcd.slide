@@ -1,6 +1,6 @@
 ################################################
 
-etcd
+etcd 101
 
 Gyuho Lee
 https://github.com/coreos/etcd
@@ -9,8 +9,8 @@ https://github.com/coreos/etcd
 
 * Slides
 
-- [[https://talks.godoc.org/github.com/gyuho/presentations/20180629-etcd/etcd.slide#1][github.com/gyuho/presentations]]
-- [[https://talks.godoc.org/github.com/gyuho/presentations/20180629-etcd/etcd.slide#1][talks.godoc.org/github.com/gyuho/presentations/20180629-etcd/etcd.slide#1]]
+- [[https://talks.godoc.org/github.com/gyuho/presentations/20180629-etcd-101/etcd.slide#1][github.com/gyuho/presentations]]
+- [[https://talks.godoc.org/github.com/gyuho/presentations/20180629-etcd-101/etcd.slide#1][talks.godoc.org/github.com/gyuho/presentations/20180629-etcd-101/etcd.slide#1]]
 
 ################################################
 
@@ -132,7 +132,7 @@ Most popular Raft implementation [[https://godoc.org/github.com/coreos/etcd/raft
 - Pre-allocated 64 MB segments
 - Buffered writes
 - Rolling checksum (CRC32)
-- Prevent/Recover write tears or data corruptions
+- Prevent/Recover write tears and data corruptions
 
 .image img/etcd-wal.png _ 900
 
@@ -198,6 +198,11 @@ MsgHup is sent to the local node, and [[https://github.com/coreos/etcd/blob/8f63
 
 When leader election begins, candidate increments its term
 
+Pre-vote feature is optional (v3.3 and v3.4):
+
+- Pre-candidate first asks other servers whether it's up-to-date enough to get votes
+- Only if it could get votes from majority, increment term and start election
+
 ################################################
 
 * (Now) Candidate A requests vote to become leader...
@@ -246,12 +251,12 @@ Candidate [[https://github.com/coreos/etcd/blob/8f6348a97d483316c5039d6bbc2f66ba
 
 * How to ensure safety, recency guarantees?
 
-- Only 1 leader, all messages are forwarded to leader
-- Randomize timeouts to avoid split votes
+- Only 1 leader, all messages are forwarded to leader (no "split-brain")
+- Randomize timeouts (minimize "split votes")
 
 Compare log index and term:
 
-- Reject vote requests with smaller "term"
+- Only vote once per each term
 - Only vote if the candidate's log is more up-to-date
 
 Ensures leader always contain latest logs.
