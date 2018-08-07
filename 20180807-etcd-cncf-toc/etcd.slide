@@ -1,0 +1,190 @@
+################################################
+
+etcd, Proposal to CNCF
+
+Gyuho Lee
+
+################################################
+
+* Slides
+
+- [[https://talks.godoc.org/github.com/gyuho/presentations/20180807-etcd-cncf-toc/etcd.slide#1][github.com/gyuho/presentations]]
+- [[https://talks.godoc.org/github.com/gyuho/presentations/20180807-etcd-cncf-toc/etcd.slide#1][talks.godoc.org/github.com/gyuho/presentations/20180807-etcd-cncf-toc/etcd.slide#1]]
+
+################################################
+
+* Agenda
+
+- Technical overview
+- Maintain etcd
+- Roadmap
+- etcd under CNCF
+
+################################################
+
+* What is etcd?
+
+################################################
+
+* What is etcd
+
+- *Distributed*key-value*store*
+- Open source [[https://github.com/coreos/etcd][github.com/coreos/etcd]] (June 2013 ~)
+- vs. [[https://zookeeper.apache.org/][ZooKeeper]] (May 2008 ~)
+- vs. Google [[https://ai.google/research/pubs/pub27897][Chubby]] (2006 ~)
+
+Widely adopted
+
+- *Kubernetes*, OpenStack
+- Alibaba, Baidu, Yandex, Verizon, NTT, Uber, Huawei, Cisco, EMC, IBM, and [[https://github.com/coreos/etcd/blob/master/Documentation/production-users.md][more]]
+
+Non-Kubernetes use case
+
+- [[https://docs.google.com/presentation/d/1_8RZH8VbX3ijH_aVi3r5FyQtfhV4oSvW-KaGsWZ5_G8/edit][NTT CLOUDWAN]]
+- [[https://www.youtube.com/watch?v=Snnqvr1g4r4][Uber m3 timeseries database]], [[https://www.youtube.com/watch?v=gPXYnCLZyLQ][How Uber operates etcd in production]]
+- [[https://www.youtube.com/watch?v=WQoxyb1o9Y4][How BrainTree replaced Redis with etcd]]
+
+################################################
+
+* etcd + Kubernetes
+
+.image img/etcd-kubernetes.png 500 800
+
+################################################
+
+* etcd is distributed
+
+- Distributed (typically 3 or 5 nodes)
+- *Consistent* + *Partition*tolerant* + *(Highly)*Available*, in CAP theorem
+- Strong(Sequential) Consistency (NOT eventual consistency)
+- Consensus over Raft
+
+################################################
+
+* Unary RPCs
+
+One-shot request
+
+  cli.Put(ctx, "foo", "bar", LeaseID)
+  cli.Get(ctx, "foo")
+  cli.Delete(ctx, "foo")
+
+  // Transaction
+  kvc.Txn(ctx).
+    If(clientv3.Compare(clientv3.Value("key"), ">", "abc")). // txn value comparisons are lexical
+    Then(clientv3.OpPut("key", "XYZ")).                      // this runs, since 'xyz' > 'abc'
+    Else(clientv3.OpPut("key", "ABC")).
+    Commit()
+
+  // Distributed locks
+  mu := concurrency.NewMutex(cli, "foo")
+  mu.Lock()
+  mu.Unlock()
+
+################################################
+
+* Streaming RPCs
+
+  // Watch for updates on key
+  ch := cli.Watch(ctx, "foo")
+  for res := range ch {}
+
+  // Bi-directional stream
+  service Watch
+    rpc Watch(stream WatchRequest) returns (stream WatchResponse)
+
+  // Uni-directional stream
+  service Election
+    rpc Observe(LeaderRequest) returns (stream LeaderResponse)
+
+################################################
+
+* etcd Technical Overview
+
+################################################
+
+* Server Replication Protocol
+
+- etcd uses [[https://raft.github.io/][Raft]], similar to Paxos
+- Leader-based distributed consensus algorithm
+- *Consistent* + *Partition*tolerant* + *(Highly)*Available*, in CAP theorem
+- Strong(Sequential) Consistency (NOT eventual consistency)
+- Client requests are forwarded to leader, automatically
+
+Most popular Raft implementation [[https://godoc.org/github.com/coreos/etcd/raft][etcd/raft]]
+
+- Used by [[https://github.com/cockroachdb/cockroach/][CockroachDB]], [[https://github.com/pingcap/tikv][TiKV]], [[https://github.com/dgraph-io/dgraph][Dgraph]], and [[https://godoc.org/github.com/coreos/etcd/raft?importers][others]]
+
+################################################
+
+* Server Raft Log Storage: Write-ahead log (WAL)
+
+- Storage layer for Raft entries in Protocol Buffer (encoded blobs)
+- Pre-allocated 64 MB segments
+- Buffered writes
+- Rolling checksum (CRC32)
+- Prevent/Recover write tears and data corruptions
+
+.image img/etcd-wal.png _ 900
+
+################################################
+
+* Server Application Data Store
+
+- After replicated(committed) through Raft
+- User requests applier
+- Retains historical key revisions (MVCC)
+- In-memory B- tree, to map keys to revision
+- On-disk B+ tree, to map revisions to key-value data
+
+.image img/etcd-mvcc.png _ 600
+
+################################################
+
+* Client
+
+Client balancer implements automatic failover under
+
+- Network partition
+- Server outage
+
+Please see [[https://etcd.readthedocs.io/en/latest/client-architecture.html#client-architecture][Client architecture]].
+
+################################################
+
+* Recap
+
+.image img/etcd.png _ 900
+
+################################################
+
+* Maintain etcd
+
+- [[https://github.com/coreos/etcd/blob/master/MAINTAINERS][MAINTAINERS]]
+- [[https://github.com/coreos/etcd][GitHub/etcd]]
+- Bi-weekly [[https://docs.google.com/document/d/16XEGyPBisZvmmoIHSZzv__LoyOeluC5a4x353CX0SIM/edit][community meeting]]
+- Extensive testing: [[https://github.com/coreos/etcd/blob/93be31d43a2728d1750120aeae7a483698ccead2/test#L616-L642][lint]], [[https://github.com/coreos/etcd/tree/master/functional][failure injection testing]], [[https://github.com/coreos/dbtester][benchmark]], [[https://coreos.com/blog/announcing-etcd-3.3][kubemark]]
+
+################################################
+
+* Roadmap
+
+- Long-term support for v3.1, v3.2, and v3.3, until community catches up
+- Better integration with latest gRPC release
+- [[https://github.com/coreos/etcd/issues/9280][etcd + Kubernetes integration testing]]
+- Support learner (non-voting) member, to improve "member add" operation
+- Formal verification of etcd Raft implementation
+- Improve [[https://etcd.readthedocs.io/en/latest/][user guides]]
+- Independent security audit
+- Jepsen tests by aphyr
+
+################################################
+
+* etcd under CNCF
+
+- Transparent billing for shared [[https://gcr.io/etcd-development/etcd][GCP etcd-development project]]
+- CI support (etcd currently uses free-tier Travis/Semaphore CI)
+- Community support
+- Manage etcd.io
+
+################################################
