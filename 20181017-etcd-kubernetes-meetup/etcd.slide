@@ -1,0 +1,266 @@
+################################################
+
+etcd, What's new?
+
+Gyuho Lee
+leegyuho@amazon.com
+
+################################################
+
+* Agenda
+
+- Introduction to etcd
+- Roadmap
+
+Slides
+
+- [[https://github.com/gyuho/presentations][github.com/gyuho/presentations]]
+- [[https://talks.godoc.org/github.com/gyuho/presentations/20181017-etcd-kubernetes-meetup/etcd.slide#1][talks.godoc.org/github.com/gyuho/presentations/20181017-etcd-kubernetes-meetup/etcd.slide#1]]
+
+################################################
+
+* What is etcd?
+
+################################################
+
+* What is etcd
+
+- *Distributed*key-value*store*
+- Open source [[https://github.com/etcd-io/etcd][github.com/etcd-io/etcd]] (June 2013 ~), [[https://github.com/cncf/toc/pull/143][CNCF project]]
+- vs. [[https://zookeeper.apache.org][ZooKeeper]] (May 2008 ~)
+- vs. Google [[https://ai.google/research/pubs/pub27897][Chubby]] (2006 ~)
+
+Widely adopted
+
+- *Kubernetes*, OpenStack
+- Alibaba, Baidu, Yandex, Verizon, NTT, Uber, Huawei, Cisco, EMC, IBM, and [[https://github.com/etcd-io/etcd/blob/master/Documentation/production-users.md][more]]
+
+Non-Kubernetes use case
+
+- [[https://docs.google.com/presentation/d/1_8RZH8VbX3ijH_aVi3r5FyQtfhV4oSvW-KaGsWZ5_G8/edit][NTT CLOUDWAN]]
+- [[https://www.youtube.com/watch?v=Snnqvr1g4r4][Uber m3 timeseries database]], [[https://www.youtube.com/watch?v=gPXYnCLZyLQ][How Uber operates etcd in production]]
+- [[https://www.youtube.com/watch?v=WQoxyb1o9Y4][How BrainTree replaced Redis with etcd]]
+
+################################################
+
+* etcd is distributed
+
+- Distributed (typically 3 or 5 nodes)
+- *Consistent* + *Partition*tolerant* + *(Highly)*Available*, in CAP theorem
+- Strong(Sequential) Consistency (NOT eventual consistency)
+- Consensus over Raft
+
+################################################
+
+* Unary RPCs
+
+One-shot request
+
+  cli.Put(ctx, "foo", "bar", LeaseID)
+  cli.Get(ctx, "foo")
+  cli.Delete(ctx, "foo")
+
+  // Transaction
+  kvc.Txn(ctx).
+    If(clientv3.Compare(clientv3.Value("key"), ">", "abc")). // txn value comparisons are lexical
+    Then(clientv3.OpPut("key", "XYZ")).                      // this runs, since 'xyz' > 'abc'
+    Else(clientv3.OpPut("key", "ABC")).
+    Commit()
+
+  // Distributed locks
+  mu := concurrency.NewMutex(cli, "foo")
+  mu.Lock()
+  mu.Unlock()
+
+################################################
+
+* Streaming RPCs
+
+  // Watch for updates on key
+  ch := cli.Watch(ctx, "foo")
+  for res := range ch {}
+
+  // Bi-directional stream
+  service Watch
+    rpc Watch(stream WatchRequest) returns (stream WatchResponse)
+
+  // Uni-directional stream
+  service Election
+    rpc Observe(LeaderRequest) returns (stream LeaderResponse)
+
+################################################
+
+* etcd Overview
+
+.image img/etcd-overview.png _ 690
+
+################################################
+
+* etcd + Kubernetes
+
+.image img/etcd-kubernetes.png 500 700
+
+################################################
+
+* etcd + Kubernetes
+
+Kubernetes v1.13 (upcoming)
+
+- [[https://groups.google.com/forum/#!topic/kubernetes-dev/DoOl77xjpDA][Drop etcd v2 support]]
+- [[https://github.com/kubernetes/kubernetes/pull/69322][etcd v3.3 client]]
+
+Kubernetes v1.12
+
+- Test and released with [[https://github.com/kubernetes/kubernetes/blob/v1.12.0/Godeps/Godeps.json][etcd v3.2.24 client]]
+
+Kubernetes v1.11
+
+- Tested with [[https://github.com/kubernetes/kubernetes/pull/61198][etcd v3.2.18 server]]
+- Released with [[https://github.com/kubernetes/kubernetes/blob/v1.11.0/Godeps/Godeps.json][etcd v3.2.13 client]]
+
+Kubernetes v1.10
+
+- Tested with [[https://github.com/kubernetes/kubernetes/pull/58645][etcd v3.2.14 server]]
+- Released with [[https://github.com/kubernetes/kubernetes/pull/57480][etcd v3.2.13 client]]
+
+################################################
+
+* Roadmap
+
+################################################
+
+* etcd v3.4 (2018)
+
+Done
+
+- Moved to "go.etcd.io/etcd", joining [[https://github.com/cncf/toc/pull/143][CNCF]]
+- Added 30+ new Prometheus metrics
+- Implemented new client balancer (roundrobin)
+- Implemented Raft pre-vote
+
+Please see [[https://github.com/etcd-io/etcd/blob/master/CHANGELOG-3.4.md][CHANGELOG-3.4]] for full lists.
+
+################################################
+
+* etcd v3.4 (next year, 2019)
+
+Planned
+
+- Can we improve membership reconfiguration?
+- Can we rollback etcd to previous etcd versions?
+
+Please see [[https://github.com/etcd-io/etcd/blob/master/CHANGELOG-3.4.md][CHANGELOG-3.4]] for full lists.
+
+################################################
+
+* Disruptive membership reconfiguration
+
+.image img/etcd-learner-figure-1.png _ 690
+
+Cluster with new member is more vulnerable to leader election
+
+################################################
+
+* Disruptive membership reconfiguration
+
+  Quorum size = (cluster size / 2) + 1
+
+.image img/etcd-learner-figure-2.png _ 550
+
+################################################
+
+* Disruptive membership reconfiguration
+
+  Quorum size = (cluster size / 2) + 1
+
+Member add operation can change the size of quorum
+
+.image img/etcd-learner-figure-3.png _ 690
+
+################################################
+
+* Disruptive membership reconfiguration
+
+  Quorum size = (cluster size / 2) + 1
+
+.image img/etcd-learner-figure-4.png _ 690
+
+Member add operation is 2-step process
+
+################################################
+
+* Disruptive membership reconfiguration
+
+  Quorum size = (cluster size / 2) + 1
+
+.image img/etcd-learner-figure-5.png _ 690
+
+################################################
+
+* Introducing Raft learner
+
+################################################
+
+* etcd v3.4 (2019): Raft learner
+
+Learner joins as a non-voting member, does not count in quorum
+
+.image img/etcd-learner-figure-6-1.png _ 700
+
+################################################
+
+* etcd v3.4 (2019): Raft learner
+
+Learner joins as a non-voting member, does not count in quorum
+
+.image img/etcd-learner-figure-6-2.png _ 700
+
+################################################
+
+* etcd v3.4 (2019): Raft learner
+
+etcd server will validate "promote" request
+
+.image img/etcd-learner-figure-7.png _ 700
+
+################################################
+
+* etcd v3.4 (2019): Raft learner
+
+Learner rejects all reads and writes (for simplest implementation possible)
+
+.image img/etcd-learner-figure-8.png _ 700
+
+################################################
+
+* Introducing Version Rollback (downgrade)
+
+################################################
+
+* How does etcd upgrade work?
+
+- Leader fetches server versions from each peer
+- Leader picks the lowest version as cluster version
+- Leader broadcasts it to peers
+- Each peer tries to apply that cluster version
+- Fail if requested cluster version is downgrade to local member's cluster version
+
+Upgrade must happen incrementally, one by one (rolling upgrade).
+
+################################################
+
+* etcd v3.4 (2019): Downgrade support
+
+(Similar to etcd rolling upgrade)
+
+"downgrade" command to temporarily whitelist a lower version:
+
+  etcdctl downgrade --target-version [TARGET_VERSION]
+  etcdctl downgrade status
+  etcdctl downgrade cancel
+
+Implementation WIP (credits to [[https://github.com/wenjiaswe][Wenjia]] at Google).
+
+Please see [[https://github.com/etcd-io/etcd/issues/9306][issues#9306]] for more.
+
+################################################
