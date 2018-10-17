@@ -264,3 +264,16 @@ Implementation WIP (credits to [[https://github.com/wenjiaswe][Wenjia]] at Googl
 Please see [[https://github.com/etcd-io/etcd/issues/9306][issues#9306]] for more.
 
 ################################################
+
+* etcd v3.4 (2019): Recap
+
+- Adding "learner" (non-voting member) Raft state
+- Adding "downgrade" (rollback) feature
+
+Progress
+
+- Initial design is done
+- We are now implementing them
+- ETA 2019
+
+################################################
