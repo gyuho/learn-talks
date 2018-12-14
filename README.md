@@ -1,5 +1,6 @@
 Presentations
 
+- https://talks.godoc.org/github.com/gyuho/presentations/20181211-etcd-kubecon-cluster-management/etcd.slide#1
 - https://talks.godoc.org/github.com/gyuho/presentations/20181017-etcd-kubernetes-meetup/etcd.slide#1
 - https://talks.godoc.org/github.com/gyuho/presentations/20180807-etcd-cncf-toc/etcd.slide#1
 - https://talks.godoc.org/github.com/gyuho/presentations/20180629-etcd-101/etcd.slide#1
