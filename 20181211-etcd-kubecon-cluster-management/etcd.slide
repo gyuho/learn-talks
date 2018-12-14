@@ -1,0 +1,192 @@
+################################################
+
+etcd, What's next for cluster management?
+
+Gyuho Lee
+leegyuho@amazon.com
+
+################################################
+
+* Agenda
+
+- Challenges in etcd cluster management
+- Can we do better? Yes!
+
+################################################
+
+* etcd is distributed
+
+- Distributed (typically 3 or 5 nodes)
+- *Consistent* + *Partition*tolerant* + *(Highly)*Available*, in CAP theorem
+- Strong(Sequential) Consistency (NOT eventual consistency)
+- Consensus over Raft
+
+################################################
+
+* Challenge #1. etcd membership reconfiguration
+
+################################################
+
+* Disruptive membership reconfiguration
+
+.image img/etcd-learner-figure-01.png _ 690
+
+Cluster with new member is more vulnerable to leadership election
+
+################################################
+
+* Network Partition Will Happen!
+
+  Quorum size = (cluster size / 2) + 1
+
+Leadership election WILL NOT happen!
+
+.image img/etcd-learner-figure-02.png _ 900
+
+################################################
+
+* Network Partition Will Happen!
+
+  Quorum size = (cluster size / 2) + 1
+
+Leadership election WILL happen!
+
+.image img/etcd-learner-figure-03.png _ 600
+
+################################################
+
+* Network Partition + Membership Reconfiguration
+
+  Quorum size = (cluster size / 2) + 1
+
+.image img/etcd-learner-figure-04.png _ 660
+
+################################################
+
+* Network Partition + Membership Reconfiguration
+
+  Quorum size = (cluster size / 2) + 1
+
+.image img/etcd-learner-figure-05.png _ 660
+
+################################################
+
+* Network Partition + Membership Reconfiguration
+
+  Quorum size = (cluster size / 2) + 1
+
+.image img/etcd-learner-figure-06.png _ 610
+
+################################################
+
+* Disruptive membership reconfiguration
+
+  Quorum size = (cluster size / 2) + 1
+
+Member add operation is 2-step process
+
+.image img/etcd-learner-figure-07.png
+
+################################################
+
+* Disruptive membership reconfiguration
+
+  Quorum size = (cluster size / 2) + 1
+
+Member add operation can increase the quorum size
+
+.image img/etcd-learner-figure-08.png
+
+################################################
+
+* Disruptive membership reconfiguration
+
+  Quorum size = (cluster size / 2) + 1
+
+.image img/etcd-learner-figure-09.png _ 670
+
+################################################
+
+* Introducing Raft Learner
+
+################################################
+
+* etcd v3.4 (2019): Raft learner
+
+Learner joins as a non-voting member, does not count in quorum
+
+.image img/etcd-learner-figure-10.png _ 660
+
+################################################
+
+* etcd v3.4 (2019): Raft learner
+
+Learner joins as a non-voting member, does not count in quorum
+
+.image img/etcd-learner-figure-11.png _ 720
+
+################################################
+
+* etcd v3.4 (2019): Raft learner
+
+etcd server will validate "promote" request
+
+.image img/etcd-learner-figure-12.png _ 720
+
+################################################
+
+* etcd v3.4 (2019): Raft learner
+
+Learner rejects all reads and writes (for simplest implementation possible)
+
+.image img/etcd-learner-figure-13.png _ 720
+
+################################################
+
+* Challenge #3. etcd upgrade
+
+################################################
+
+* How does etcd upgrade work?
+
+- Leader fetches server versions from each peer
+- Leader picks the lowest version as cluster version
+- Leader broadcasts it to peers
+- Each peer tries to apply that cluster version
+- Fail if requested cluster version is downgrade to local member's cluster version
+
+Upgrade must happen incrementally, one by one (rolling upgrade).
+
+################################################
+
+* How does etcd upgrade work?
+
+.image img/etcd-upgrade-downgrade-figure-01.png _ 650
+
+################################################
+
+* How does etcd upgrade work?
+
+.image img/etcd-upgrade-downgrade-figure-02.png _ 660
+
+################################################
+
+* Introducing Version Rollback (downgrade)
+
+################################################
+
+* etcd v3.4 (2019): Downgrade support
+
+(Similar to etcd rolling upgrade)
+
+"downgrade" command to temporarily whitelist a lower version:
+
+  etcdctl downgrade --target-version [TARGET_VERSION]
+  etcdctl downgrade status
+  etcdctl downgrade cancel
+
+Implementation WIP (credits to [[https://github.com/wenjiaswe][Wenjia]] at Google).
+
+Please see [[https://github.com/etcd-io/etcd/issues/9306][issues#9306]] for more.
+
+################################################
