@@ -1,3 +1,8 @@
+
+https://gyuho.github.io/talks
+
+https://talks.gyuho.dev
+
 Presentations
 
 - https://talks.godoc.org/github.com/gyuho/talks/20181211-etcd-kubecon-cluster-management/etcd.slide#1
