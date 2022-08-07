@@ -25,26 +25,23 @@
 <body>
     <div class="reveal">
         <div class="slides">
-            <section data-background-image="kbw2022-img/slide1.png" data-background-size="700px">
-                <aside class="notes">
-                    📝
-                </aside>
+            <section data-background-image="kbw2022-media/scale-avalanache-with-subnets.png"
+                data-background-size="700px">
             </section>
             <section data-background-gradient="linear-gradient(to bottom, #0289ee, #badefe)">
-                <h2>Who am I?</h2>
+                <h3>Who am I?</h3>
                 <ul>
-                    <li class="hack">Gyuho Lee</li>
                     <li>이규호</li>
+                    <li class="hack">Gyuho Lee</li>
                     <li>Engineer, Ava Labs</li>
                     <li><a target="_blank" href="https://github.com/gyuho">github.com/gyuho</a></li>
                     <li><a target="_blank" href="https://twitter.com/gyuhox">twitter.com/gyuhox</a></li>
+                    <li><a target="_blank" href="https://t.me/leegyuho">telegram/leegyuho</a></li>
                 </ul>
-                <aside class="notes">
-                    📝
-                </aside>
             </section>
+
             <section>
-                <h2>Agenda</h2>
+                <h3>Agenda</h3>
                 <ul>
                     <li>What is Avalanche?</li>
                     <li>Avalanche Consensus ☃️</li>
@@ -54,114 +51,303 @@
                     <li>Roadmap</li>
                     <li>Q/A</li>
                 </ul>
-                <p>Slides: <a href="https://talks.gyuho.dev/kbw2022.html">talks.gyuho.dev/kbw2022.html</a>
+                <p>Slides <a target="_blank" href="https://talk.gyuho.dev/kbw2022.html">talk.gyuho.dev/kbw2022.html</a>
                 </p>
-                <aside class="notes">
-                    📝
-                </aside>
             </section>
+
             <section>
                 <h2>What is Avalanche?</h2>
                 <p>Overview</p>
-                <aside class="notes">
-                    📝
-                </aside>
             </section>
+
             <section>
-                <p>TODO</p>
-                <aside class="notes">
-                    📝
-                </aside>
+                <h3>Avalanche ($AVAX)</h3>
+                <ul>
+                    <li>Launched in Sep 2020</li>
+                    <li>Novel Consensus Mechanism (Snowman)</li>
+                    <li>EVM Friendly</li>
+                    <li>Fast and Scalable L1 (>2K EVM TPS)</li>
+                    <li>Reliable (no downtime, no reorg)</li>
+                    <li>Platform for Deploying Subnets</li>
+                </ul>
             </section>
+
+            <section>
+                <h3>Ava Labs</h3>
+                <ul>
+                    <li>Founded in 2020 by Emin Gün Sirer, ex-Cornell professor, the creator of the first p2p
+                        cryptocurrency system in 2003, and Cornell PhDs</li>
+                </ul>
+                <p>Ava Labs builds products and infrastructure that streamline the user experience for web3.</p>
+            </section>
+
+            <section>
+                <h3>Avalanche Today</h3>
+                <p>>3.6B requests (a day, July 2022) with ~80ms latency</p>
+                <img width="720" src="kbw2022-media/emin-3b-requests-per-day-2022.png"></img>
+                <img width="720" src="kbw2022-media/kevin-3b-requests-per-day-2022.png"></img>
+            </section>
+
+            <section>
+                <h3>Avalanche Today</h3>
+                <p>Subnet effect -- scales without congestion</p>
+                <p><a target="_blank" href="https://subnets.avax.network/stats">subnets.avax.network/stats</a>
+                </p>
+                <img width="720" src="kbw2022-media/subnets-stats-2022-08.png"></img>
+            </section>
+
+            <section>
+                <h3>Horizontal Scale with Subnets</h3>
+                <ul>
+                    <li>Consensus with sub-second finality (Fast)</li>
+                    <li>Decentralized with >1,300 validators (Secure)</li>
+                    <li>Subnets for application specific chains (Isolation)</li>
+                </ul>
+            </section>
+
             <section>
                 <h2>Avalanche Consensus ☃️</h2>
                 <p>Snowman Protocol</p>
-                <aside class="notes">
-                    📝
-                </aside>
             </section>
+
             <section>
-                <p>TODO</p>
-                <img src="kbw2022-img/choice.gif"></img>
+                <h3>Consensus Until Now</h3>
+                <h4>Classical (Lamport 1988, Paxos/Raft/etcd)</h4>
+                <ul>
+                    <li>Quick finality but does not scale</li>
+                    <li>Quadratic message complexity</li>
+                    <li>Permissioned, requires precise membership</li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>Consensus Until Now</h3>
+                <h4>Nakamoto (2008, Bitcoin)</h4>
+                <ul>
+                    <li>Robust, no need for precise membership</li>
+                    <li>High latency, low throughput</li>
+                    <li>Wastes energy, not green, not sustainable</li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>Consensus Until Now</h3>
+                <h4>PBFT (1999), HotStuff (Chain BFT 2019)</h4>
+                <ul>
+                    <li>Powers many PoS networks (Tendermint, Diem)</li>
+                    <li>Committee/leader-based</li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>Avalanche Family</h3>
+                <ul>
+                    <li>Instant finality, low latency (~1 sec)</li>
+                    <li>High throughput (>1,500 TPS on EVM, 5K on X-chain)</li>
+                    <li>Scales >10-million nodes</li>
+                    <li>Robust, no need for precise membership</li>
+                    <li>Leaderless</li>
+                    <li>Quiescent, green, sustainable</li>
+                    <li>Inspired by epidemic protocols and gossip networks</li>
+                    <li>New idea: deliberately metastable</li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>Binary Consensus</h3>
+                <ul>
+                    <li>Pick one <text style="color:red;">red</text>/<text style="color:blue;">blue</text> -- no correct
+                        answer</li>
+                    <li>Adopt the majority color by repeated sub-sampling</li>
+                    <li>Consensus results in the entire network agreeing on either <text style="color:red;">red</text>
+                        or <text style="color:blue;">blue</text></li>
+                    <li>Even with 50/50 split, random perturbation in the sampling results in a single value being
+                        selected</li>
+                </ul>
+                <img src="kbw2022-media/binary-choice.gif"></img>
+            </section>
+
+            <section data-transition="none">
+                <img src="kbw2022-media/network1.png"></img>
                 <aside class="notes">
-                    📝
+                    Here's the very basic visual representation of the consensus.
+                    <br>
+                    So, you have this node and the neighbors of red and blue.
+                    <br>
+                    It samples the peers and sees the simple majority, red.
                 </aside>
             </section>
+
+            <section data-transition="none">
+                <img src="kbw2022-media/network2.png"></img>
+                <aside class="notes">
+                    And it becomes the majority color, red, itself.
+                </aside>
+            </section>
+
+            <section data-transition="none">
+                <img src="kbw2022-media/network3.png"></img>
+            </section>
+
+            <section data-transition="none">
+                <img src="kbw2022-media/network4.png"></img>
+            </section>
+
+            <section>
+                <p><a target="_blank" href="https://youtu.be/Sfb8G54AM_4">YouTube Link</a></p>
+                <video width="600" height="500" controls>
+                    <source src="kbw2022-media/instant-finality.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </section>
+
             <section>
                 <h2>Avalanche Platform</h2>
                 <p>Platform Overview</p>
-                <aside class="notes">
-                    📝
-                </aside>
             </section>
+
             <section>
-                <p>TODO</p>
-                <aside class="notes">
-                    📝
-                </aside>
+                <h3>Primary Network</h3>
+                <ul>
+                    <li><b>X-chain</b> runs on DAG, used for exchanging assets</li>
+                    <li><b>P-chain</b> coordinates validators and subnets</li>
+                    <li><b>C-chain</b> executes EVM contracts with ETH RPCs</li>
+                </ul>
+                <p>Subnet validator must validate primary network!</p>
             </section>
+
             <section>
                 <h2>Avalanche Subnet 🔺</h2>
                 <p>What is Subnet?</p>
                 <aside class="notes">
-                    📝
+                    Now let's talk about subnet.
                 </aside>
             </section>
+
             <section>
-                <p>TODO</p>
-                <aside class="notes">
-                    📝
-                </aside>
+                <h3>Subnet (sub-network)</h3>
+                <img width="600" src="kbw2022-media/emin-john-subnet-2022.png"></img>
             </section>
+
+            <section>
+                <h3>Subnet (sub-network)</h3>
+                <p>Custom networks running on Avalanche</p>
+                <ul>
+                    <li><b>Security:</b> Choose who and how many can participate</li>
+                    <li><b>Compliance:</b> Comply with specific industry, jurisdiction, regulatory environment</li>
+                    <li><b>Custom Execution:</b> Common VM (subnet-evm with custom gas token), custom VM
+                        optimized for own use case (key-value store, gaming)
+                    </li>
+                    <li><b>Privacy:</b> Controls data visibility (encryption)</li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>Effects of Subnet</h3>
+                <img width="350" src="kbw2022-media/crabada1.png"></img>
+                <img width="800" src="kbw2022-media/crabada2.png"></img>
+            </section>
+
             <section>
                 <h2>Avalanche/Subnet vs. L2</h2>
                 <p>What about L2s? Comparative Analysis</p>
-                <aside class="notes">
-                    📝
-                </aside>
             </section>
+
             <section>
-                <p>TODO</p>
+                <h3>Our Approach for Scalability</h3>
+                <p>Subnets == uniform way of scaling with uniform API</p>
+                <img width="600" src="kbw2022-media/emin-nomad-simplicity-2022.png"></img>
+            </section>
+
+            <section>
+                <h3>What about sharding?</h3>
+                <img width="600" src="kbw2022-media/emin-sharding-2020.png"></img>
                 <aside class="notes">
-                    📝
+                    Then, what about sharding?
+                    <br>
+                    Same.
+                    <br>
+                    We take minimalistic approach.
+                    <br>
+                    We are science driven.
+                    <br>
+                    We only build if it's scientifically necessary.
+                    <br>
+                    We want our platform to be boring in a sense that it just works and reliable.
+                    <br>
+                    We don't want to complicate the system with extra overhead, because it fragments the ecosystem and
+                    developer experience.
+                    <br>
+                    In fact, you can also think of subnet as a simpler sharding mechanism.
                 </aside>
             </section>
+
+            <section>
+                <h3>What about Layer 2s?</h3>
+                <ul>
+                    <li><b>Can Subnet provide its own security?</b> Yes</li>
+                    <li><b>Can Subnet rely on shared security?</b> Yes</li>
+                    <li><b>Can you build L2 with Subnet?</b> Yes</li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>L2 (rollups) vs. Subnet</h3>
+                <p><b>Rollup Security + Dispute Resolution:</b> Base blockchain (where security is provided) must be
+                    able to execute arbitrary L2 state transitions to resolve disputes.</p>
+                <p><b>Subnet:</b> Subnets are sovereign networks and provide their own security. State transitions do
+                    not need to be runnable on another (root) blockchain.</p>
+            </section>
+
+            <section>
+                <h3>L2 (rollups) vs. Subnet</h3>
+                <p><b>Rollup Fault Isolation:</b> If the root blockchain halts, the L2 cannot finalize data.</p>
+                <p><b>Subnet:</b> Subnets are their own networks. If Avalanche halts, Subnets will continue finalizing
+                    data independently (they run their own consensus).</p>
+            </section>
+
+            <section>
+                <h3>L2 (rollups) vs. Subnet</h3>
+                <p><b>Rollup Time-To-Finality:</b> To ensure there is sufficient time to dispute state roots committed
+                    to the root blockchain, finality must be >6 hours (in some cases 7 days).</p>
+                <p><b>Subnet:</b> Subnet finality is achieved in sub-second. Subnets use the same consensus engine
+                    implementation as the Avalanche Primary Network.</p>
+            </section>
+
+            <section>
+                <h3>Subnet Security Considerations</h3>
+                <ul>
+                    <li>Control key management</li>
+                    <li>Validator count and reputation</li>
+                    <li>Data replication and peer count</li>
+                    <li>Virtual machine correctness</li>
+                    <li>Subnet Visibility (public or private)</li>
+                </ul>
+            </section>
+
             <section>
                 <h2>Roadmap</h2>
                 <p>What's Next?</p>
                 <aside class="notes">
-                    📝
+                    We have been working really hard to make subnet even better and more accessible.
+                    <br>
+                    So, what's next?
                 </aside>
             </section>
+
             <section>
-                <p>TODO</p>
-                <aside class="notes">
-                    📝
-                </aside>
+                <h3>Roadmap</h3>
+                <ul>
+                    <li>Permissionless Subnet Staking</li>
+                    <li>Cross-Subnet Bridging</li>
+                    <li>New SDKs and VMs (Rust VMs)</li>
+                </ul>
             </section>
+
             <section>
-                <p>TODO</p>
-                <aside class="notes">
-                    📝
-                </aside>
-            </section>
-            <section>
-                <p>TODO</p>
-                <aside class="notes">
-                    📝
-                </aside>
-            </section>
-            <section>
-                <p>TODO</p>
-                <aside class="notes">
-                    📝
-                </aside>
-            </section>
-            <section>
-                <p>TODO</p>
-                <aside class="notes">
-                    📝
-                </aside>
+                <h3>Welcome to Multiverse</h3>
+                <p>Avalanche Foundation Launches Incentive Program to Accelerate Growth of Subnets</p>
+                <img width="400" src="kbw2022-media/multiverse-qr-code-2022.png"></img>
             </section>
         </div>
     </div>
