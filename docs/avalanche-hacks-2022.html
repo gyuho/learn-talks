@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-    <title>Scale with Subnets</title>
+    <title>Avalanche Overview and Consensus</title>
 
     <link rel="stylesheet" href="dist/reset.css">
     <link rel="stylesheet" href="dist/reveal.css">
@@ -25,20 +25,19 @@
 <body>
     <div class="reveal">
         <div class="slides">
-            <section data-background-image="kbw2022-media/scale-avalanache-with-subnets.png"
-                data-background-size="700px">
+            <section>
+                <h3>Avalanche Overview and Consensus</h3>
                 <aside class="notes">
                 </aside>
             </section>
             <section data-background-gradient="linear-gradient(to bottom, #0289ee, #badefe)">
                 <h3>Who am I?</h3>
                 <ul>
-                    <li>이규호</li>
-                    <li class="hack">Gyuho Lee</li>
-                    <li>Engineer, Ava Labs</li>
+                    <li>Gyuho Lee (이규호)</li>
+                    <li>Protocol Engineer, Ava Labs</li>
                     <li><a target="_blank" href="https://github.com/gyuho">github.com/gyuho</a></li>
                     <li><a target="_blank" href="https://twitter.com/gyuhox">twitter.com/gyuhox</a></li>
-                    <li><a target="_blank" href="https://t.me/leegyuho">telegram/leegyuho</a></li>
+                    <li><a target="_blank" href="https://t.me/leegyuho">t.me/leegyuho</a> (Telegram)</li>
                     <li><a target="_blank" href="https://linkedin.com/in/gyuho">linkedin.com/in/gyuho</a></li>
                 </ul>
                 <aside class="notes">
@@ -51,12 +50,9 @@
                     <li>What is Avalanche?</li>
                     <li>Avalanche Consensus ☃️</li>
                     <li>Avalanche Platform</li>
-                    <li>Avalanche Subnet 🔺</li>
-                    <li>Avalanche/Subnet vs. L2</li>
-                    <li>Roadmap</li>
-                    <li>Q/A</li>
                 </ul>
-                <p>Slides <a target="_blank" href="https://talk.gyuho.dev/kbw2022.html">talk.gyuho.dev/kbw2022.html</a>
+                <p>Slides <a target="_blank"
+                        href="https://talk.gyuho.dev/avalanche-hacks-2022.html">talk.gyuho.dev/avalanche-hacks-2022.html</a>
                 </p>
                 <aside class="notes">
                 </aside>
@@ -72,12 +68,13 @@
             <section>
                 <h3>Avalanche ($AVAX)</h3>
                 <ul>
-                    <li>Launched in Sep 2020</li>
-                    <li>Novel Consensus Mechanism (Snowman)</li>
-                    <li>EVM Friendly</li>
+                    <li>Mainnet launched in Sep 2020</li>
+                    <li>Supports EVM</li>
+                    <li>Novel Consensus Algorithm: Snowman</li>
+                    <li>Proof-of-Stake</li>
                     <li>Fast and Scalable L1 (>2K EVM TPS)</li>
                     <li>Reliable (no downtime, no reorg)</li>
-                    <li>Platform for Deploying Subnets</li>
+                    <li>Platform for deploying "Subnets"</li>
                 </ul>
                 <aside class="notes">
                 </aside>
@@ -97,8 +94,8 @@
             <section>
                 <h3>Avalanche Today</h3>
                 <p>>3.6B requests (a day, July 2022) with ~80ms latency</p>
-                <img width="720" src="kbw2022-media/emin-3b-requests-per-day-2022.png"></img>
-                <img width="720" src="kbw2022-media/kevin-3b-requests-per-day-2022.png"></img>
+                <img width="670" src="avalanche-hacks-2022-media/emin-3b-requests-per-day-2022.png"></img>
+                <img width="670" src="avalanche-hacks-2022-media/kevin-3b-requests-per-day-2022.png"></img>
                 <aside class="notes">
                 </aside>
             </section>
@@ -108,7 +105,7 @@
                 <p>Subnet effect -- scales without congestion</p>
                 <p><a target="_blank" href="https://subnets.avax.network/stats">subnets.avax.network/stats</a>
                 </p>
-                <img width="720" src="kbw2022-media/subnets-stats-2022-08.png"></img>
+                <img width="720" src="avalanche-hacks-2022-media/subnets-stats-2022-08.png"></img>
                 <aside class="notes">
                 </aside>
             </section>
@@ -132,8 +129,23 @@
             </section>
 
             <section>
+                <h3>Consensus</h3>
+                <p>"Assume a collection of processes that can propose values. A consensus algorithm ensures that a
+                    single one among the proposed values is chosen." Leslie Lamport, <a target="_blank"
+                        href="https://lamport.azurewebsites.net/pubs/paxos-simple.pdf">Paxos Made Simple
+                        (2001)</a>
+                </p>
+                <p>Should this transaction be placed in a block or not?</p>
+                <p>PoW or PoS is NOT a consensus mechanism!</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
                 <h3>Consensus Until Now</h3>
-                <h4>Classical (Lamport 1988, Paxos/Raft/etcd)</h4>
+                <h4>Classical (<a target="_blank"
+                        href="https://lamport.azurewebsites.net/pubs/lamport-paxos.pdf">Lamport 1998</a>,
+                    Paxos/Raft/etcd)</h4>
                 <ul>
                     <li>Quick finality but does not scale</li>
                     <li>Quadratic message complexity</li>
@@ -145,7 +157,7 @@
 
             <section>
                 <h3>Consensus Until Now</h3>
-                <h4>Nakamoto (2008, Bitcoin)</h4>
+                <h4>Nakamoto (<a target="_blank" href="https://bitcoin.org/bitcoin.pdf">Bitcoin 2008</a>)</h4>
                 <ul>
                     <li>Robust, no need for precise membership</li>
                     <li>High latency, low throughput</li>
@@ -157,18 +169,29 @@
 
             <section>
                 <h3>Consensus Until Now</h3>
-                <h4>PBFT (1999), HotStuff (Chain BFT 2019)</h4>
+                <h4>PBFT (<a target="_blank" href="https://pmg.csail.mit.edu/papers/osdi99.pdf">1999</a>)</h4>
                 <ul>
-                    <li>Powers many PoS networks (Tendermint, Diem)</li>
+                    <li>Powers many PoS networks (Tendermint, Casper)</li>
                     <li>Committee/leader-based</li>
+                    <ul>
+                        <li>Can't scale easily ("leader/coordinator" dilemma)</li>
+                        <li>Quorum-based: must know all participants</li>
+                        <li>Fast when membership is small</li>
+                    </ul>
+                    <li>Deterministic safety (100% safe)</li>
+                    <ul>
+                        <li>Hard limit on the Byzantine adversaries</li>
+                    </ul>
+                    <li>Many are very complicated</li>
                 </ul>
                 <aside class="notes">
                 </aside>
             </section>
 
             <section>
-                <h3>Avalanche Family</h3>
+                <h3>Avalanche Consensus Family</h3>
                 <ul>
+                    <li>Published in <a target="_blank" href="https://www.avalabs.org/whitepapers">2020</a></li>
                     <li>Instant finality, low latency (~1 sec)</li>
                     <li>High throughput (>1,500 TPS on EVM, 5K on X-chain)</li>
                     <li>Scales >10-million nodes</li>
@@ -199,35 +222,94 @@
             </section>
 
             <section data-transition="none">
+                <p>At the beginning, pick any color (no correct answer)</p>
+                <p>Radomly sub-sample the network</p>
                 <img src="avalanche/avalanche-network-1.png"></img>
                 <aside class="notes">
                 </aside>
             </section>
 
             <section data-transition="none">
+                <p>"Red" is the majority from the sample</p>
+                <p>Adopt the majority color, "red"</p>
                 <img src="avalanche/avalanche-network-2.png"></img>
                 <aside class="notes">
                 </aside>
             </section>
 
             <section data-transition="none">
+                <p>Repeat this random sampling in parallel, in all nodes</p>
+                <p>Repeated random sampling perturbs conflicting state</p>
                 <img src="avalanche/avalanche-network-3.png"></img>
                 <aside class="notes">
                 </aside>
             </section>
 
             <section data-transition="none">
+                <p>Sequence of metastable process of random sampling</p>
+                <p>All converge to the same value (agreement)</p>
                 <img src="avalanche/avalanche-network-4.png"></img>
                 <aside class="notes">
                 </aside>
             </section>
 
             <section>
-                <p><a target="_blank" href="https://youtu.be/Sfb8G54AM_4">YouTube Link</a></p>
+                <p>"The protocol is designed to tip" (<a target="_blank"
+                        href="https://youtu.be/Sfb8G54AM_4">YouTube</a>)</p>
                 <video width="600" height="500" controls>
                     <source src="avalanche/avalanche-instant-finality.mp4" type="video/mp4">
                     Your browser does not support the video tag.
                 </video>
+                <aside class="notes">
+                    Gün has much better illustration.
+                </aside>
+            </section>
+
+            <section>
+                <h3>Fast Finality</h3>
+                <p>Avalanche == no block re-org, no longest chain rule</p>
+                <img width="450" src="avalanche-hacks-2022-media/block-reorgs-2022-1.png"></img>
+                <img width="450" src="avalanche-hacks-2022-media/block-reorgs-2022-2.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Avalanche Consensus FAQs</h3>
+                <ul>
+                    <li>What are "safety" and "liveness" parameters?</li>
+                    <li>What happens when there is no transaction conflict?</li>
+                    <li>What happens to conflicting transactions?</li>
+                    <li>What do you mean by "Quiescent Protocol"?</li>
+                    <li>Is Avalanche consensus leaderless?</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Snowman++ (Proposer VM)</h3>
+                <ul>
+                    <li>Released in <a target="_blank"
+                            href="https://medium.com/avalancheavax/apricot-phase-four-snowman-and-reduced-c-chain-transaction-fees-1e1f67b42ecf">Sep
+                            2021</a>
+                    </li>
+                    <li>Single, designated (preferred) block proposer</li>
+                    <li>Reduce block proposer contention</li>
+                    <li>Avoid "useless" work</li>
+                    <li>Increase throughput, lower latency</li>
+                    <li>Consensus protocol itself is still "leaderless"</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Frosty</h3>
+                <ul>
+                    <li>Best of both worlds: classical + Avalanche consensus</li>
+                    <li>Bost liveness without sacrificing the safety</li>
+                </ul>
                 <aside class="notes">
                 </aside>
             </section>
@@ -236,6 +318,7 @@
                 <h2>Avalanche Platform</h2>
                 <p>Platform Overview</p>
                 <aside class="notes">
+                    Now let's talk about Avalanche platform.
                 </aside>
             </section>
 
@@ -247,136 +330,6 @@
                     <li><b>C-chain</b> executes EVM contracts with ETH RPCs</li>
                 </ul>
                 <p>Subnet validator must validate primary network!</p>
-                <aside class="notes">
-                </aside>
-            </section>
-
-            <section>
-                <h2>Avalanche Subnet 🔺</h2>
-                <p>What is Subnet?</p>
-                <aside class="notes">
-                </aside>
-            </section>
-
-            <section>
-                <h3>Subnet (sub-network)</h3>
-                <img width="600" src="kbw2022-media/emin-john-subnet-2022.png"></img>
-                <aside class="notes">
-                </aside>
-            </section>
-
-            <section>
-                <h3>Subnet (sub-network)</h3>
-                <p>Custom networks running on Avalanche</p>
-                <ul>
-                    <li><b>Security:</b> Choose who and how many can participate</li>
-                    <li><b>Compliance:</b> Comply with specific industry, jurisdiction, regulatory environment</li>
-                    <li><b>Custom Execution:</b> Common VM (subnet-evm with custom gas token), custom VM
-                        optimized for own use case (key-value store, gaming)
-                    </li>
-                    <li><b>Privacy:</b> Controls data visibility (encryption)</li>
-                </ul>
-                <aside class="notes">
-                </aside>
-            </section>
-
-            <section>
-                <h3>Effects of Subnet</h3>
-                <img width="350" src="kbw2022-media/crabada1.png"></img>
-                <img width="800" src="kbw2022-media/crabada2.png"></img>
-                <aside class="notes">
-                </aside>
-            </section>
-
-            <section>
-                <h2>Avalanche/Subnet vs. L2</h2>
-                <p>What about L2s? Comparative Analysis</p>
-                <aside class="notes">
-                </aside>
-            </section>
-
-            <section>
-                <h3>Our Approach for Scalability</h3>
-                <p>Subnets == uniform way of scaling with uniform API</p>
-                <img width="600" src="kbw2022-media/emin-nomad-simplicity-2022.png"></img>
-                <aside class="notes">
-                </aside>
-            </section>
-
-            <section>
-                <h3>What about sharding?</h3>
-                <img width="600" src="kbw2022-media/emin-sharding-2020.png"></img>
-                <aside class="notes">
-                </aside>
-            </section>
-
-            <section>
-                <h3>What about Layer 2s?</h3>
-                <ul>
-                    <li><b>Can Subnet provide its own security?</b> Yes</li>
-                    <li><b>Can Subnet rely on shared security?</b> Yes</li>
-                    <li><b>Can you build L2 with Subnet?</b> Yes</li>
-                </ul>
-                <aside class="notes">
-                </aside>
-            </section>
-
-            <section>
-                <h3>L2 (rollups) vs. Subnet</h3>
-                <p><b>Rollup Security + Dispute Resolution:</b> Base blockchain (where security is provided) must be
-                    able to execute arbitrary L2 state transitions to resolve disputes.</p>
-                <p><b>Subnet:</b> Subnets are sovereign networks and provide their own security. State transitions do
-                    not need to be runnable on another (root) blockchain.</p>
-                <aside class="notes">
-                </aside>
-            </section>
-
-            <section>
-                <h3>L2 (rollups) vs. Subnet</h3>
-                <p><b>Rollup Fault Isolation:</b> If the root blockchain halts, the L2 cannot finalize data.</p>
-                <p><b>Subnet:</b> Subnets are their own networks. If Avalanche halts, Subnets will continue finalizing
-                    data independently (they run their own consensus).</p>
-                <aside class="notes">
-                </aside>
-            </section>
-
-            <section>
-                <h3>L2 (rollups) vs. Subnet</h3>
-                <p><b>Rollup Time-To-Finality:</b> To ensure there is sufficient time to dispute state roots committed
-                    to the root blockchain, finality must be >6 hours (in some cases 7 days).</p>
-                <p><b>Subnet:</b> Subnet finality is achieved in sub-second. Subnets use the same consensus engine
-                    implementation as the Avalanche Primary Network.</p>
-                <aside class="notes">
-                </aside>
-            </section>
-
-            <section>
-                <h3>Subnet Security Considerations</h3>
-                <ul>
-                    <li>Control key management</li>
-                    <li>Validator count and reputation</li>
-                    <li>Data replication and peer count</li>
-                    <li>Virtual machine correctness</li>
-                    <li>Subnet Visibility (public or private)</li>
-                </ul>
-                <aside class="notes">
-                </aside>
-            </section>
-
-            <section>
-                <h2>Roadmap</h2>
-                <p>What's Next?</p>
-                <aside class="notes">
-                </aside>
-            </section>
-
-            <section>
-                <h3>Roadmap</h3>
-                <ul>
-                    <li>Permissionless Subnet Staking</li>
-                    <li>Cross-Subnet Bridging</li>
-                    <li>New SDKs and VMs (Rust VMs)</li>
-                </ul>
                 <aside class="notes">
                 </aside>
             </section>
@@ -395,7 +348,7 @@
             <section>
                 <h3>Welcome to Multiverse</h3>
                 <p>Avalanche Foundation Launches Incentive Program to Accelerate Growth of Subnets</p>
-                <img width="400" src="kbw2022-media/multiverse-qr-code-2022.png"></img>
+                <img width="400" src="avalanche-hacks-2022-media/multiverse-qr-code-2022.png"></img>
                 <aside class="notes">
                 </aside>
             </section>
