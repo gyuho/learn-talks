@@ -1,0 +1,755 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>Avalanche blockchain on AWS</title>
+
+    <link rel="stylesheet" href="dist/reset.css">
+    <link rel="stylesheet" href="dist/reveal.css">
+    <link rel="stylesheet" href="dist/theme/white.css">
+
+    <!-- Theme used for syntax highlighted code -->
+    <link rel="stylesheet" href="plugin/highlight/monokai.css">
+
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/hack-font@3/build/web/hack.css">
+    <style>
+        li.hack {
+            font-family: Hack, monospace;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section>
+                <h3>Run Avalanche blockchain on AWS</h3>
+                <p><a target="_blank"
+                        href="https://talk.gyuho.dev/avalanche-aws-2022q3.html">talk.gyuho.dev/avalanche-aws-2022q3.html</a>
+                </p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section data-background-gradient="linear-gradient(to bottom, #0289ee, #badefe)">
+                <h3>Who am I?</h3>
+                <ul>
+                    <li>Gyuho Lee (이규호)</li>
+                    <li>Protocol Engineer, Ava Labs</li>
+                    <li>prev. Senior SDE, AWS EKS</li>
+                    <li>Top contributor to etcd</li>
+                    <li><a target="_blank" href="https://github.com/gyuho">github.com/gyuho</a></li>
+                    <li><a target="_blank" href="https://twitter.com/gyuhox">twitter.com/gyuhox</a></li>
+                    <li><a target="_blank" href="https://t.me/leegyuho">t.me/leegyuho</a> (Telegram)</li>
+                    <li><a target="_blank" href="https://linkedin.com/in/gyuho">linkedin.com/in/gyuho</a></li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!-- Visions -->
+            <section>
+                <h3>Vision #1</h3>
+                <p>If we are to develop a reliable and faster way to validate a fix without impacting the stability of
+                    the live backend, then we need to start up the entire stack sandboxed.
+                </p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Vision #2</h3>
+                <p>If an instituition needs to keep its blockchain application private until the release, then it
+                    needs its own sandboxed, isolated network for testing.
+                </p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Vision #3</h3>
+                <p>If we are to decentralize a blockchain network, then anyone should be able to run a node, in the
+                    most affordable way possible.
+                </p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!-- Steps -->
+            <section>
+                <h3>Steps</h3>
+                <ul>
+                    <li>Understand Avalanche Consensus ☃️</li>
+                    <li>Understand Avalanche Platform and Subnet 🔺</li>
+                    <li>Understand what it takes to run an Avalanche node</li>
+                    <li>Formulate Day-1 user experience: set up a node</li>
+                    <li>Formulate Day-2 user experience: node operation</li>
+                    <li>Implement command-line interface for automation</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!-- News -->
+            <section>
+                <h3>News</h3>
+                <img width="130" src="avalanche/green.jpg"></img>
+                <ul>
+                    <li>Avalanche node maintains chain states</li>
+                    <li>Higher uptime, more staking rewards</li>
+                    <li>c5.2xlarge instance >$3,000 (yearly cost)</li>
+                    <li>Spot instance ~$1,100</li>
+                </ul>
+                <p><a href="https://github.com/ava-labs/avalanche-ops" target="_blank">avalanche-ops</a> can
+                    automate all these!</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!-- Avalanche intro -->
+            <section>
+                <h2>What is Avalanche?</h2>
+                <p>Overview</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Avalanche ($AVAX)</h3>
+                <ul>
+                    <li>Mainnet launched in Sep 2020</li>
+                    <li>Supports Ethereum Virtual Machine (EVM)</li>
+                    <li>Novel Consensus Algorithm: Snowman</li>
+                    <li>Proof-of-Stake</li>
+                    <li>Fast and Scalable L1 (>2K EVM TPS)</li>
+                    <li>Reliable (no downtime, no reorg)</li>
+                    <li>Platform for deploying "Subnets"</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Ava Labs</h3>
+                <ul>
+                    <li>Founded in 2020 by Emin Gün Sirer, ex-Cornell professor, the creator of the first p2p
+                        cryptocurrency system in 2003, and Cornell PhDs</li>
+                </ul>
+                <p>Ava Labs builds products and infrastructure that streamline the user experience for web3.</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Avalanche Today</h3>
+                <p>>3.6B requests (a day, July 2022) with ~80ms latency</p>
+                <img width="670" src="avalanche/emin-3b-requests-per-day-2022.png"></img>
+                <img width="670" src="avalanche/kevin-3b-requests-per-day-2022.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Avalanche Today</h3>
+                <p>Subnet effect -- scales without congestion</p>
+                <p><a target="_blank" href="https://subnets.avax.network/stats">subnets.avax.network/stats</a>
+                </p>
+                <img width="720" src="avalanche/subnets-stats-2022-08.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Horizontal Scale with Subnets</h3>
+                <ul>
+                    <li>Consensus with sub-second finality (Fast)</li>
+                    <li>Decentralized with >1,300 validators (Secure)</li>
+                    <li>Subnets for application specific chains (Isolation)</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!-- Consensus -->
+            <section>
+                <h2>Avalanche Consensus ☃️</h2>
+                <p>Snowman Protocol</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Consensus</h3>
+                <p>"Assume a collection of processes that can propose values. A consensus algorithm ensures that a
+                    single one among the proposed values is chosen." Leslie Lamport, <a target="_blank"
+                        href="https://lamport.azurewebsites.net/pubs/paxos-simple.pdf">Paxos Made Simple
+                        (2001)</a>
+                </p>
+                <p>Should this transaction be placed in a block or not?</p>
+                <p>PoW or PoS is NOT a consensus mechanism!</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Consensus Until Now</h3>
+                <h4>Classical (<a target="_blank"
+                        href="https://lamport.azurewebsites.net/pubs/lamport-paxos.pdf">Lamport 1998</a>,
+                    Paxos/Raft/etcd)</h4>
+                <ul>
+                    <li>Quick finality but does not scale</li>
+                    <li>Quadratic message complexity</li>
+                    <li>Permissioned, requires precise membership</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Consensus Until Now</h3>
+                <h4>Nakamoto (<a target="_blank" href="https://bitcoin.org/bitcoin.pdf">Bitcoin 2008</a>)</h4>
+                <ul>
+                    <li>Robust, no need for precise membership</li>
+                    <li>High latency, low throughput</li>
+                    <li>Wastes energy, not green, not sustainable</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Avalanche Consensus Family</h3>
+                <ul>
+                    <li>Published in <a target="_blank" href="https://www.avalabs.org/whitepapers">2020</a></li>
+                    <li>Instant finality, low latency (~1 sec)</li>
+                    <li>High throughput (>1,500 TPS on EVM, 5K on X-chain)</li>
+                    <li>Scales >10-million nodes</li>
+                    <li>Robust, no need for precise membership</li>
+                    <li>Leaderless</li>
+                    <li>Quiescent, green, sustainable</li>
+                    <li>Inspired by epidemic protocols and gossip networks</li>
+                    <li>New idea: deliberately metastable</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Binary Consensus</h3>
+                <ul>
+                    <li>Pick one <text style="color:red;">red</text>/<text style="color:blue;">blue</text> -- no correct
+                        answer</li>
+                    <li>Adopt the majority color by repeated sub-sampling</li>
+                    <li>Consensus results in the entire network agreeing on either <text style="color:red;">red</text>
+                        or <text style="color:blue;">blue</text></li>
+                    <li>Even with 50/50 split, random perturbation in the sampling results in a single value being
+                        selected</li>
+                </ul>
+                <img src="avalanche/avalanche-binary-choice.gif"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section data-transition="none">
+                <p>At the beginning, pick any color (no correct answer)</p>
+                <p>Radomly sub-sample the network</p>
+                <img src="avalanche/avalanche-network-1.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section data-transition="none">
+                <p>"Red" is the majority from the sample</p>
+                <p>Adopt the majority color, "red"</p>
+                <img src="avalanche/avalanche-network-2.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section data-transition="none">
+                <p>Repeat this random sampling in parallel, in all nodes</p>
+                <p>Repeated random sampling perturbs conflicting state</p>
+                <img src="avalanche/avalanche-network-3.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section data-transition="none">
+                <p>Sequence of metastable process of random sampling</p>
+                <p>All converge to the same value (agreement)</p>
+                <img src="avalanche/avalanche-network-4.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!-- Subnet -->
+            <section>
+                <h2>Avalanche Subnet 🔺</h2>
+                <p>What is Subnet?</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Primary Network == Special Subnet</h3>
+                <ul>
+                    <li><b>X-chain</b> runs on DAG, used for exchanging assets</li>
+                    <li><b>P-chain</b> coordinates validators and subnets</li>
+                    <li><b>C-chain</b> executes EVM contracts with ETH RPCs</li>
+                </ul>
+                <p>Subnet validator must validate primary network!</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Subnet (sub-network)</h3>
+                <img width="600" src="avalanche/emin-john-subnet-2022.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Subnets</h3>
+                <img width="900" src="avalanche/subnets-graph.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Subnet (sub-network)</h3>
+                <p>Custom networks running on Avalanche</p>
+                <ul>
+                    <li><b>Security:</b> Choose who and how many can participate</li>
+                    <li><b>Compliance:</b> Comply with specific industry, jurisdiction, regulatory environment</li>
+                    <li><b>Custom Execution:</b> Common VM (subnet-evm with custom gas token), custom VM
+                        optimized for own use case (key-value store, gaming)
+                    </li>
+                    <li><b>Privacy:</b> Controls data visibility (encryption)</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Effects of Subnet</h3>
+                <img width="320" src="avalanche/crabada1.png"></img>
+                <img width="730" src="avalanche/crabada2.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!-- AWS: node infra structure -->
+            <section>
+                <h3>Avalanche node infrastructure</h3>
+                <p>Requirements for an Avalanche validator</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>To be an Avalanche validator...</h3>
+                <ul>
+                    <li>Virtual machine (AMD/ARM 64, <a href="https://github.com/ava-labs/avalanchego#installation"
+                            target="_blank">8 CPU + 16 GiB RAM</a>)</li>
+                    <li>Dedicated disk/volume (SSD, <a href="https://github.com/ava-labs/avalanchego#installation"
+                            target="_blank">1 TiB</a>)</li>
+                    <li>Staking certificate (X.509 certificate)</li>
+                    <li>Health checks</li>
+                    <li>Logging</li>
+                    <li>Metrics</li>
+                    <li>(Optional) Static IP</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Avalanche validator security</h3>
+                <ul>
+                    <li>Staking certificate maps to a unique Node ID</li>
+                    <ul>
+                        <li>Only one Node ID can be connected to network</li>
+                        <li>Two nodes can't join network with same Node ID</li>
+                        <li>DO NOT SHARE your staking certificate</li>
+                        <li>DO NOT SHARE your Node ID</li>
+                    </ul>
+                    <li>HTTP port open to internet for serving API</li>
+                    <li>Staking port open to internet for p2p network</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!-- AWS: set up node -->
+            <section>
+                <h3>Set up Avalanche node</h3>
+                <p>Requirements for Day-1</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Case #1. Create isolated network</h3>
+                <ul>
+                    <li>Entirely self-contained stack</li>
+                    <li>No production state dependency</li>
+                    <li>Useful for private testing/experiments</li>
+                    <li>Requires seed anchor and non-anchor nodes</li>
+                    <li>Anchor nodes must be bootstrapped first</li>
+                    <li>Non-anchor nodes later join anchor nodes</li>
+                    <li>Genesis can be generated from anchor nodes</li>
+                    <li>Requires control plane to coordinate peer discovery</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Case #1. Create isolated network</h3>
+                <p>Example implementation in <a href="https://github.com/ava-labs/avalanche-ops"
+                        target="_blank">avalanche-ops</a></p>
+                <img width="800" src="avalanche/avalanche-ops-isolated-network.png"></img>
+                <p>avalancheup is control plane, avalanched is daemon</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Case #2. Join public test network</h3>
+                <ul>
+                    <li>No need to set up seed anchor nodes</li>
+                    <li>Just connect to well-established seed anchor nodes</li>
+                    <li>Actively used by many applications (staging)</li>
+                    <li>Closely simulate main network (multi-tenant)</li>
+                    <li>Provides built-in <a href="https://subnets-test.avax.network" target="_blank">subnet
+                            explorer</a>
+                        integration
+                    </li>
+                    <li>Request funds from <a href="https://faucet.avax.network" target="_blank">faucet</a> for test
+                        transactions</li>
+                    <li>Take a few hours for initial state sync</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Case #2. Join public test network</h3>
+                <p>Example implementation in <a href="https://github.com/ava-labs/avalanche-ops"
+                        target="_blank">avalanche-ops</a></p>
+                <img width="400" src="avalanche/avalanche-ops-asg-fuji.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Case #3. Join public main network</h3>
+                <ul>
+                    <li>No need to set up seed anchor nodes</li>
+                    <li>Just connect to well-established seed anchor nodes</li>
+                </ul>
+                <p>Example implementation in <a href="https://github.com/ava-labs/avalanche-ops"
+                        target="_blank">avalanche-ops</a></p>
+                <img width="400" src="avalanche/avalanche-ops-asg-main.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Node provisioning best practices</h3>
+                <ul>
+                    <li>Encrypt staking certificate for backups</li>
+                    <ul>
+                        <li>Use envelope encryption with KMS</li>
+                        <li>avalanche-ops <a
+                                href="https://github.com/ava-labs/avalanche-ops/blob/d58f881782482f0cbfc9140d734772aed7763c8c/bin/avalanched-aws/src/command.rs#L139-L162"
+                                target="_blank">envelope
+                                encrypts certificates</a></li>
+                    </ul>
+                    <li>Static EBS volume creation</li>
+                    <ul>
+                        <li>Map a node and its state to an availability zone</li>
+                        <li>Do not use ephemeral instance storage</li>
+                        <li>Provision a separate EBS volume (cheaper)</li>
+                        <li>On EC2 termination, let EBS volume be detached</li>
+                        <li>Do not delete the EBS volume (reuse it)</li>
+                    </ul>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Node provisioning: avalanche-ops</h3>
+                <img width="900" src="avalanche/avalanche-ops-node-provisioning.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Node provisioning: avalanche-ops</h3>
+                <img width="700" src="avalanche/avalanche-ops-encrypt-certs.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!-- AWS: operate node -->
+            <section>
+                <h3>Operate Avalanche node</h3>
+                <p>Requirements for Day-2</p>
+                <aside class="notes">
+                    TODO
+                    <br>
+                    --
+                    <br>
+                </aside>
+            </section>
+
+            <section>
+                <h3>Node operation best practices</h3>
+                <ul>
+                    <li>Reuse static EBS volume</li>
+                    <ul>
+                        <li>Reuse the detached EBS volume</li>
+                        <li>Useful when running Spot instance</li>
+                        <li>Reload the chain state for faster bootstrapping</li>
+                        <li>Reuse the staking certificate for maximum uptime</li>
+                        <li>avalanche-ops <a
+                                href="https://github.com/gyuho/volume-manager/blob/ac9a1a9ff9f45ec7f71ff05205d43f638f5fc34f/aws-volume-provisioner/src/command.rs#L300-L311"
+                                target="_blank">remaps
+                                available volumes</a> (reuse)</li>
+                    </ul>
+                    <li>Monitor critical metrics</li>
+                    <ul>
+                        <li>Avalanche use Prometheus metrics</li>
+                        <li>avalanche-ops uses <a href="https://github.com/ava-labs/avalanche-telemetry"
+                                target="_blank">avalanche-telemetry</a> (scrape)</li>
+                    </ul>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Node operation: avalanche-ops</h3>
+                <img width="900" src="avalanche/avalanche-ops-node-operation.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Node operation: avalanche-ops</h3>
+                <p>Define scrape rules with <a
+                        href="https://github.com/ava-labs/avalanche-ops/blob/d58f881782482f0cbfc9140d734772aed7763c8c/bin/avalancheup-aws/artifacts/default.metrics.rules.yaml"
+                        target="_blank">regex</a> </p>
+                <img width="900" src="avalanche/avalanche-ops-metrics.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Kubernetes (EKS) vs. avalanche-ops</h3>
+                <ul>
+                    <li>avalanche-ops is a command-line interface</li>
+                    <li>avalanche-ops is a self-service tool</li>
+                    <li>avalanche-ops does not to replace K8s-based infra</li>
+                    <li>Kubernetes makes sense iff you manage >100 nodes</li>
+                    <li>If you run a node as a hobby, K8s is overkill/costly</li>
+                    <li>Container-based stateful application is still early</li>
+                    <li>With K8s, you may face some issues with <a
+                            href="https://github.com/kubernetes-sigs/aws-ebs-csi-driver/issues/679" target="_blank">CSI
+                            driver</a></li>
+                    <li>"volume's been terminating for hours"</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Extending avalanche-ops</h3>
+                <ul>
+                    <li>avalanche-ops is a command-line interface</li>
+                    <li>Uses AWS Cloudformation for resource creation</li>
+                    <li>avalanched agent is downloaded in the user script</li>
+                    <li>Can be easily integrated with other tools</li>
+                    <ul>
+                        <li>CDK can import Cloudformation templates (<a
+                                href="https://github.com/ava-labs/avalanche-ops/tree/main/cdk/avalancheup-aws#examples"
+                                target="_blank">code</a>)</li>
+                        <li>e.g., <a href="https://github.com/ava-labs/avalanche-cli" target="_blank">avalanche-cli</a>
+                            can do the same</li>
+                    </ul>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!-- Conclusions/Contributions -->
+            <section>
+                <h2>Contributions</h2>
+                <ul>
+                    <li>Explained why Avalanche blockchain is special</li>
+                    <ul>
+                        <li>Avalanche consensus achieves sub-second finality</li>
+                    </ul>
+                    <li>Identified AWS infrastructure components for running an Avalanche validator</li>
+                    <li>Showed AWS best practices to keep your Avalanche node safe and reliable</li>
+                    <li>Introduced avalanche-ops that can launch a node with a single command, in most cost-effective
+                        way
+                    </li>
+                    <li>Proposed future integration paths with CDK and avalanche-cli</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+        </div>
+    </div>
+
+    <script src="dist/reveal.js"></script>
+    <script src="plugin/notes/notes.js"></script>
+    <script src="plugin/markdown/markdown.js"></script>
+    <script src="plugin/highlight/highlight.js"></script>
+    <script>
+        Reveal.initialize({
+            hash: true,
+            slideNumber: 'c/t',
+            plugins: [RevealMarkdown, RevealHighlight, RevealNotes]
+        });
+    </script>
+</body>
+
+</html>
