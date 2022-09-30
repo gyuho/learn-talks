@@ -1,0 +1,300 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>Avalanche blockchain on AWS</title>
+
+    <link rel="stylesheet" href="dist/reset.css">
+    <link rel="stylesheet" href="dist/reveal.css">
+    <link rel="stylesheet" href="dist/theme/white.css">
+
+    <!-- Theme used for syntax highlighted code -->
+    <link rel="stylesheet" href="plugin/highlight/monokai.css">
+
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/hack-font@3/build/web/hack.css">
+    <style>
+        li.hack {
+            font-family: Hack, monospace;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section>
+                <h3>Distributed Load Generator for Avalanche</h3>
+                <p><a target="_blank"
+                        href="https://talk.gyuho.dev/distributed-load-generator-avalanche-2022.html">talk.gyuho.dev/distributed-load-generator-avalanche-2022.html</a>
+                </p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section data-background-gradient="linear-gradient(to bottom, #0289ee, #badefe)">
+                <h3>Who am I?</h3>
+                <ul>
+                    <li>Gyuho Lee (이규호)</li>
+                    <li>Protocol Engineer, Ava Labs</li>
+                    <li><a target="_blank" href="https://github.com/gyuho">github.com/gyuho</a></li>
+                    <li><a target="_blank" href="https://twitter.com/gyuhox">twitter.com/gyuhox</a></li>
+                    <li><a target="_blank" href="https://t.me/leegyuho">t.me/leegyuho</a> (Telegram)</li>
+                    <li><a target="_blank" href="https://linkedin.com/in/gyuho">linkedin.com/in/gyuho</a></li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>How Do We Load Test Today</h3>
+                <p>Loads from a single machine, no visibility of true TPS</p>
+                <img width="400" src="distributed-load-generator-avalanche-2022/01-diagram-bad.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!-- Visions -->
+            <section>
+                <h3>Vision</h3>
+                <p>If we are to simulate real-world workloads, the loads must be generated in a distributed manner with
+                    full observability into accepted transaction counts and its timestamps.
+                </p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!-- Steps -->
+            <section>
+                <h3>Steps and News</h3>
+                <ul>
+                    <li>Expose accepted transaction count metrics (at VM)</li>
+                    <li>Expose last accepted block timestamp at consensus layer</li>
+                    <li>Control plane to spin up VMs on AWS</li>
+                    <li>Agent that can generate loads against Avalanche</li>
+                    <li>Metrics collector to monitor TPS</li>
+                </ul>
+                <p><a href="https://github.com/ava-labs/avalanche-ops" target="_blank">avalanche-ops/blizzard</a> can
+                    automate all these!</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Worklogs</h3>
+                <p>Add transaction accepted count metric to subnet-evm</p>
+                <img width="800" src="distributed-load-generator-avalanche-2022/02-change-subnet-evm.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Worklogs</h3>
+                <p>Container size to measure throughput/block size</p>
+                <img width="800"
+                    src="distributed-load-generator-avalanche-2022/03-change-avalanchego-container-size.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Worklogs</h3>
+                <p>Unix timestamps for each accepted block, useful for computing TPS</p>
+                <img width="800"
+                    src="distributed-load-generator-avalanche-2022/04-change-avalanchego-accepted-timestamp.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Worklogs</h3>
+                <p>prometheus-manager to match new metrics with regex</p>
+                <img width="900"
+                    src="distributed-load-generator-avalanche-2022/05-change-prometheus-manager-timestamp.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Worklogs</h3>
+                <p>prometheus-manager to match new metrics with regex</p>
+                <img width="900"
+                    src="distributed-load-generator-avalanche-2022/06-change-prometheus-manager-accepted.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Worklogs</h3>
+                <p>prometheus-manager to match new metrics with regex</p>
+                <img width="900"
+                    src="distributed-load-generator-avalanche-2022/07-change-avalanche-ops-timestamp.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Worklogs</h3>
+                <p>prometheus-manager to match new metrics with regex</p>
+                <img width="800"
+                    src="distributed-load-generator-avalanche-2022/08-change-avalanche-ops-accepted.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Worklogs</h3>
+                <p>Command-line interface to spin up worker machines</p>
+                <img width="700" src="distributed-load-generator-avalanche-2022/09-change-blizzardup.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Worklogs</h3>
+                <p>Agent that runs on remote machines</p>
+                <img width="800" src="distributed-load-generator-avalanche-2022/10-change-blizzard.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Workflow</h3>
+                <p>"blizzardup" control plane spins up worker machines</p>
+                <img width="600" src="distributed-load-generator-avalanche-2022/11-diagram-blizzardup.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Workflow</h3>
+                <p>"blizzard" agents send loads in parallel using Rust to generate X/C/subnet-evm loads</p>
+                <img width="500" src="distributed-load-generator-avalanche-2022/12-diagram-good.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Demo</h3>
+                <p>Example metrics while loads are being sent</p>
+                <p>TPS = (tx_accepted_count cur - prev) / (last_accepted_timestamp cur - prev)</p>
+                <img width="1000" src="distributed-load-generator-avalanche-2022/13-metrics.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Demo</h3>
+                <p>Example "blizzardup" command</p>
+                <img width="900" src="distributed-load-generator-avalanche-2022/14-blizzardup-cli.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Demo</h3>
+                <p>When "blizzardup" command completes</p>
+                <img width="700" src="distributed-load-generator-avalanche-2022/15-blizzardup-cli.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Roadmap</h3>
+                <ul>
+                    <li>Github CI integration</li>
+                    <li>Improve data collection</li>
+                    <li>Improve test coverage</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Changes 1</h3>
+                <ul>
+                    <li><a href="https://github.com/ava-labs/subnet-evm/pull/283"
+                            target="_blank">subnet-evm/pull/283</a></li>
+                    <li><a href="https://github.com/ava-labs/avalanchego-internal/pull/1877"
+                            target="_blank">avalanchego-internal/pull/1877</a></li>
+                    <li><a href="https://github.com/ava-labs/avalanchego-internal/pull/2071"
+                            target="_blank">avalanchego-internal/pull/2071</a></li>
+                    <li><a href="https://github.com/gyuho/prometheus-manager/commit/5f4a90454a7ad03753d3b4b61428df68ba835ef6"
+                            target="_blank">prometheus-manager/commit/5f4a90</a></li>
+                    <li><a href="https://github.com/gyuho/prometheus-manager/commit/9fe8d9f0fab3377942ff3cd9cb08907e5207989c"
+                            target="_blank">prometheus-manager/commit/9fe8d9</a>
+                    </li>
+                    <li><a href="https://github.com/ava-labs/avalanche-ops/commit/aec7cd10e2242856421b806c080a75e60d237863"
+                            target="_blank">avalanche-ops/commit/aec7cd</a>
+                    </li>
+                    <li><a href="https://github.com/ava-labs/avalanche-ops/commit/31c3d157a467f522ae98449d04829dcae050dbf2"
+                            target="_blank">avalanche-ops/commit/31c3d1</a>
+                    </li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Changes 2</h3>
+                <ul>
+                    <li><a href="https://github.com/ava-labs/avalanche-ops/pull/144"
+                            target="_blank">avalanche-ops/pull/144</a></li>
+                    <li><a href="https://github.com/ava-labs/avalanche-ops/pull/145"
+                            target="_blank">avalanche-ops/pull/145</a></li>
+                    <li><a href="https://github.com/ava-labs/avalanche-rust/pull/188"
+                            target="_blank">avalanche-rust/pull/188</a></li>
+                    <li><a href="https://github.com/ava-labs/avalanche-rust/pull/189"
+                            target="_blank">avalanche-rust/pull/189</a></li>
+                    <li><a href="https://github.com/ava-labs/avalanche-rust/pull/190"
+                            target="_blank">avalanche-rust/pull/190</a></li>
+                    <li><a href="https://github.com/ava-labs/avalanche-ops/pull/147"
+                            target="_blank">avalanche-ops/pull/147</a></li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+        </div>
+    </div>
+
+    <script src="dist/reveal.js"></script>
+    <script src="plugin/notes/notes.js"></script>
+    <script src="plugin/markdown/markdown.js"></script>
+    <script src="plugin/highlight/highlight.js"></script>
+    <script>
+        Reveal.initialize({
+            hash: true,
+            slideNumber: 'c/t',
+            plugins: [RevealMarkdown, RevealHighlight, RevealNotes]
+        });
+    </script>
+</body>
+
+</html>
