@@ -1,0 +1,646 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>Avalanche blockchain on AWS</title>
+
+    <link rel="stylesheet" href="dist/reset.css">
+    <link rel="stylesheet" href="dist/reveal.css">
+    <link rel="stylesheet" href="dist/theme/white.css">
+
+    <!-- Theme used for syntax highlighted code -->
+    <link rel="stylesheet" href="plugin/highlight/monokai.css">
+
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/hack-font@3/build/web/hack.css">
+    <style>
+        li.hack {
+            font-family: Hack, monospace;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section>
+                <h3>Scale Avalanche with Subnet</h3>
+                <p><a target="_blank"
+                        href="https://talk.gyuho.dev/avalanche-taipei-2022q4.html">talk.gyuho.dev/avalanche-taipei-2022q4.html</a>
+                </p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section data-background-gradient="linear-gradient(to bottom, #0289ee, #badefe)">
+                <h3>Who am I?</h3>
+                <ul>
+                    <li>이규호 (Gyuho Lee)</li>
+                    <li>Protocol Engineer, Ava Labs</li>
+                    <li><a target="_blank" href="https://github.com/gyuho">github.com/gyuho</a></li>
+                    <li><a target="_blank" href="https://twitter.com/gyuhox">twitter.com/gyuhox</a></li>
+                    <li><a target="_blank" href="https://t.me/leegyuho">t.me/leegyuho</a> (Telegram)</li>
+                    <li><a target="_blank" href="https://linkedin.com/in/gyuho">linkedin.com/in/gyuho</a></li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+
+
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!-- Visions -->
+            <!-- What is the big idea? What concrete advances will it allow? Be explicit. -->
+            <section>
+                <h3>Vision #1</h3>
+                <p>If we are to build new financial foundation for the whole world, the system must be decentralized and
+                    censorship-resistant.</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Vision #2</h3>
+                <p>If we are to digitize all assets in the world, we need horizontally scalable solution.</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Vision #3</h3>
+                <p>If we are to commoditize blockchains, we must achieve web2-like reliability and flexible architecture
+                    to support app-chains.</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+
+
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!-- Steps -->
+            <!-- List the steps needed to carry out the idea. Show the reader you don’t just have the idea, you can also do something with the idea. -->
+            <section>
+                <h3>Steps</h3>
+                <ul>
+                    <li>System that scales to millions of nodes</li>
+                    <li>Consensus with sub-second finality</li>
+                    <li>Flexibility to support app-specific chain</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+
+
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!-- News -->
+            <!-- List the results coming from these steps. Be as specific as possible. -->
+            <section>
+                <h3>News</h3>
+                <img height="400" src="avalanche/pigeon-avalanche.png"></img>
+                <p>Yes. Avalanche solves scalability while decentralized with novel consensus algorithm and subnets.</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+
+
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!-- Avalanche intro -->
+            <section>
+                <h2>What is Avalanche?</h2>
+                <p>Overview</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Avalanche ($AVAX)</h3>
+                <ul>
+                    <li>Mainnet launched in Sep 2020</li>
+                    <li>Supports Ethereum Virtual Machine (EVM)</li>
+                    <li>Novel Consensus Algorithm: Snowman</li>
+                    <li>Proof-of-Stake</li>
+                    <li>Fast and Scalable L1 (>2K EVM TPS)</li>
+                    <li>Reliable (no downtime, no reorg)</li>
+                    <li>Platform for deploying "Subnets"</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Avalanche Today</h3>
+                <p>>3.6B requests (a day, July 2022) with ~80ms latency</p>
+                <img width="670" src="avalanche/emin-3b-requests-per-day-2022.png"></img>
+                <img width="670" src="avalanche/kevin-3b-requests-per-day-2022.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Avalanche Today</h3>
+                <p><a target="_blank" href="https://subnets.avax.network/stats">Subnet effect</a> -- scales without
+                    congestion</p>
+                <img width="720" src="avalanche/subnets-stats-2022-08.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Avalanche Today</h3>
+                <p>DFK subnet using <a target="_blank"
+                        href="https://subnets.avax.network/defi-kingdoms/stats?metricLeft=gas_used&metricRight=">more
+                        gas</a> than
+                    <a target="_blank" href="https://polygonscan.com/chart/gasused">Polygon</a> and <a target="_blank"
+                        href="https://bscscan.com/chart/gasused">BNB</a>
+                </p>
+                <img width="450" src="avalanche/subnets-stats-gas-usage-polygon-2022-11.png"></img>
+                <img width="450" src="avalanche/subnets-stats-gas-usage-bnb-2022-11.png"></img>
+                <img width="550" src="avalanche/subnets-stats-gas-usage-dfk-2022-11.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Avalanche Today</h3>
+                <p>Subnet horizontally scales!</p>
+                <p><a target="_blank" href="https://subnets.avax.network/stats">>500 TPS</a> (possible >5,000 TPS)</p>
+                <img width="700" src="avalanche/subnets-stats-tps-2022-11.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Avalanche Consensus + Subnets</h3>
+                <ul>
+                    <li>Consensus with sub-second finality (Fast)</li>
+                    <li>Decentralized with >1,200 validators (Secure)</li>
+                    <li>Subnets for application specific chains (Isolation)</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+
+
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!-- Consensus -->
+            <section>
+                <h2>Avalanche Consensus ☃️</h2>
+                <p>Snowman Protocol</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Consensus</h3>
+                <p>"Assume a collection of processes that can propose values. A consensus algorithm ensures that a
+                    single one among the proposed values is chosen." Leslie Lamport, <a target="_blank"
+                        href="https://lamport.azurewebsites.net/pubs/paxos-simple.pdf">Paxos Made Simple
+                        (2001)</a>
+                </p>
+                <p>Should this transaction be placed in a block or not?</p>
+                <p>PoW or PoS is NOT a consensus mechanism!</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Consensus Until Now</h3>
+                <h4>Classical (<a target="_blank"
+                        href="https://lamport.azurewebsites.net/pubs/lamport-paxos.pdf">Lamport 1998</a>,
+                    Paxos/Raft/etcd)</h4>
+                <ul>
+                    <li>Quick finality but does not scale</li>
+                    <li>Quadratic message complexity</li>
+                    <li>Permissioned, requires precise membership</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Consensus Until Now</h3>
+                <h4>Nakamoto (<a target="_blank" href="https://bitcoin.org/bitcoin.pdf">Bitcoin 2008</a>)</h4>
+                <ul>
+                    <li>Robust, no need for precise membership</li>
+                    <li>High latency, low throughput</li>
+                    <li>Wastes energy, not green, not sustainable</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Avalanche Consensus Family</h3>
+                <ul>
+                    <li>Published in <a target="_blank" href="https://www.avalabs.org/whitepapers">2020</a></li>
+                    <li>Instant finality, low latency (~1 sec)</li>
+                    <li>High throughput (>1,500 TPS on EVM, 5K on X-chain)</li>
+                    <li>Scales >10-million nodes</li>
+                    <li>Robust, no need for precise membership</li>
+                    <li>Leaderless</li>
+                    <li>Quiescent, green, sustainable</li>
+                    <li>Inspired by epidemic protocols and gossip networks</li>
+                    <li>New idea: deliberately metastable</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Avalanche Sustainability</h3>
+                <img width="750" src="avalanche/avalanche-crypto-carbon-raitings-institute-2022.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Binary Consensus</h3>
+                <ul>
+                    <li>Pick one <text style="color:red;">red</text>/<text style="color:blue;">blue</text> -- no correct
+                        answer</li>
+                    <li>Adopt the majority color by repeated sub-sampling</li>
+                    <li>Consensus results in the entire network agreeing on either <text style="color:red;">red</text>
+                        or <text style="color:blue;">blue</text></li>
+                    <li>Even with 50/50 split, random perturbation in the sampling results in a single value being
+                        selected</li>
+                </ul>
+                <img src="avalanche/avalanche-binary-choice.gif"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section data-transition="none">
+                <p>At the beginning, pick any color (no correct answer)</p>
+                <p>Radomly sub-sample the network</p>
+                <img src="avalanche/avalanche-network-1.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section data-transition="none">
+                <p>"Red" is the majority from the sample</p>
+                <p>Adopt the majority color, "red"</p>
+                <img src="avalanche/avalanche-network-2.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section data-transition="none">
+                <p>Repeat this random sampling in parallel, in all nodes</p>
+                <p>Repeated random sampling perturbs conflicting state</p>
+                <img src="avalanche/avalanche-network-3.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section data-transition="none">
+                <p>Sequence of metastable process of random sampling</p>
+                <p>All converge to the same value (agreement)</p>
+                <img src="avalanche/avalanche-network-4.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Fast Finality</h3>
+                <p>Avalanche == no block re-org, no longest chain rule</p>
+                <ul>
+                    <li>Re-org in game? May lose item after tx revert</li>
+                    <li>Re-org in bridge? Must wait longer for source chain</li>
+                    <li>Re-org in payment? May lose money for goods</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+
+
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!-- Subnet -->
+            <section>
+                <h2>Avalanche Subnet 🔺</h2>
+                <p>What is Subnet?</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Primary Network == Special Subnet</h3>
+                <ul>
+                    <li><b>X-chain</b> runs on DAG, used for exchanging assets</li>
+                    <li><b>P-chain</b> coordinates validators and subnets</li>
+                    <li><b>C-chain</b> executes EVM contracts with ETH RPCs</li>
+                </ul>
+                <p>Subnet validator must validate primary network!</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Subnet (sub-network)</h3>
+                <img width="600" src="avalanche/emin-john-subnet-2022.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Subnets</h3>
+                <img width="900" src="avalanche/subnets-graph.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Subnets provide failure isolation</h3>
+                <p>Failure in one subnet does not impact the other!</p>
+                <p>Thus better fault tolerance and better reliability!</p>
+                <img width="900" src="avalanche/subnets-graph-failures.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Subnet (sub-network)</h3>
+                <p>Custom networks running on Avalanche</p>
+                <ul>
+                    <li><b>Security:</b> Choose who and how many can participate</li>
+                    <li><b>Compliance:</b> Comply with specific industry, jurisdiction, regulatory environment (KYC)
+                    </li>
+                    <li><b>Custom Execution:</b> Common VM (subnet-evm with custom gas token), custom VM
+                        optimized for own use case (key-value store, gaming, Rust 🦀)
+                    </li>
+                    <li><b>Privacy:</b> Controls data visibility (encryption)</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Effects of Subnet</h3>
+                <img width="320" src="avalanche/crabada1.png"></img>
+                <img width="730" src="avalanche/crabada2.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+
+
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!-- FAQ -->
+            <section>
+                <h2>FAQ</h2>
+                <p>(Hot Takes)</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Avalanche vs. Cosmos/Polygon(PoS)/Klaytn</h3>
+                <p>No upper cap on consensus membership.</p>
+                <table>
+                    <tr>
+                        <th>Avalanche</th>
+                        <th>Cosmos</th>
+                        <th>Polygon</th>
+                        <th>Klaytn</th>
+                    </tr>
+                    <tr>
+                        <td><a href="https://subnets.avax.network/stats/validators"
+                                target="_blank">>1,200</a><sup>[1]</sup></td>
+                        <td><a href="https://forum.cosmos.network/t/proposal-draft-increase-the-validator-set-of-cosmos-hub-to-200-from-175/7283/36"
+                                target="_blank">~200</a></td>
+                        <td><a href="https://staking.polygon.technology/" target="_blank">~100</a></td>
+                        <td><a href="https://scope.klaytn.com/" target="_blank">~50</a></td>
+                    </tr>
+                </table>
+                <p>[1] Theoretically, Avalanche can scale beyond millions.</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Avalanche vs. Cosmos/Polygon(PoS)/Klaytn</h3>
+                <p>Sub-second finality, no block re-org (합의 취소).</p>
+                <table>
+                    <tr>
+                        <th></th>
+                        <th>Avalanche</th>
+                        <th>Cosmos</th>
+                        <th>Polygon</th>
+                        <th>Klaytn</th>
+                    </tr>
+                    <tr>
+                        <td>Finality</td>
+                        <td>
+                            <a href="https://snowtrace.io/chart/blocktime" target="_blank">
+                                < 1-sec</a><sup>[1]</sup>
+                        </td>
+                        <td><a href="https://v1.cosmos.network/intro" target="_blank">1-sec</a></td>
+                        <td><a href="https://polygonscan.com/chart/blocktime" target="_blank">2-sec</a></td>
+                        <td><a href="https://docs.klaytn.foundation/klaytn2/finality-and-improvements"
+                                target="_blank">1-sec</a></td>
+                    </tr>
+                    <tr>
+                        <td>Re-org</td>
+                        <td>No</td>
+                        <td>No</td>
+                        <td><a href="https://polygonscan.com/blocks_forked" target="_blank">Yes</a></td>
+                        <td>No<sup>[2]</sup></td>
+                    </tr>
+                </table>
+                <p>[1] Blocktimes are configurable for faster finality.</p>
+                <p>[2] The chain <a href="https://www.coindeskkorea.com/news/articleView.html?idxno=80902"
+                        target="_blank">halts</a> to prevent re-orgs.</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Avalanche subnets vs. Layer-2</h3>
+                <p>No shared security requirement.</p>
+                <p>Instead, elastic/on-demand security.</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Why validate subnet?</h3>
+                <p>Subnet has its own token and rewards.</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Transfer between subnets?</h3>
+                <p>Yes, possible (soon).</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Rust 🦀 virtual machine?</h3>
+                <p>Yes, possible (today, <a href="https://twitter.com/_patrickogrady/status/1590409263280627712"
+                        target="_blank">tweet</a>).</p>
+                <ul>
+                    <li><a href="https://github.com/ava-labs/timestampvm-rs" target="_blank">timestampvm-rs</a></li>
+                    <li><a href="https://github.com/ava-labs/spacesvm-rs" target="_blank">spacesvm-rs</a></li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+
+
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!-- Getting Started -->
+            <section>
+                <h3>Getting started?</h3>
+                <ul>
+                    <li><a target="_blank" href="https://www.avax.network/">avax.network</a></li>
+                    <li><a target="_blank" href="https://github.com/ava-labs/avalanche-cli">avalanche-cli</a> launches
+                        subnet in 30-second</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+
+
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!-- Conclusions/Contributions -->
+            <!-- What did you do that hasn’t been done before? Use “sanctioned verbs” such as prove, demonstrate, implement, test (experiment), frame (problem), survey, identify (key problem), present, speculate, worked out (table, classification). -->
+            <section>
+                <h2>Contributions</h2>
+                <ul>
+                    <li>Discussed why we need blockchain</li>
+                    <li>Discussed why blockchain must be scalable</li>
+                    <li>Explained why Avalanche blockchain is scalable</li>
+                    <ul>
+                        <li>Reliability with the fastest tx finality</li>
+                        <li>Flexibility to run custom VMs with custom tokens</li>
+                    </ul>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+        </div>
+    </div>
+
+    <script src="dist/reveal.js"></script>
+    <script src="plugin/notes/notes.js"></script>
+    <script src="plugin/markdown/markdown.js"></script>
+    <script src="plugin/highlight/highlight.js"></script>
+    <script>
+        Reveal.initialize({
+            hash: true,
+            slideNumber: 'c/t',
+            plugins: [RevealMarkdown, RevealHighlight, RevealNotes]
+        });
+    </script>
+</body>
+
+</html>
