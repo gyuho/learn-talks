@@ -487,7 +487,7 @@
                 <p>Subnet has its own gas token!</p>
                 <p>Isolated gas consumption, thus no gas fee spikes</p>
                 <p>Isolated loads, thus better performance</p>
-                <img height="330" src="avalanche/subnets-stats-2023-04-gas-used.png"></img>
+                <img height="300" src="avalanche/subnets-stats-2023-04-gas-used.png"></img>
                 <aside class="notes">
                 </aside>
             </section>
@@ -543,13 +543,31 @@
                                 target="_blank">>1,200</a><sup>[1]</sup></td>
                         <td><a href="https://forum.cosmos.network/t/proposal-draft-increase-the-validator-set-of-cosmos-hub-to-200-from-175/7283/36"
                                 target="_blank">~200</a></td>
-                        <td><a href="https://staking.polygon.technology/" target="_blank">~100</a>><sup>[2]</sup></td>
+                        <td><a href="https://staking.polygon.technology/" target="_blank">~100</a><sup>[2]</sup></td>
                         <td><a href="https://scope.klaytn.com" target="_blank">~30</a></td>
                         <td><a href="https://hedera.com/network-nodes" target="_blank">26</a></td>
                     </tr>
                 </table>
                 <p>[1] Theoretically, Avalanche can scale beyond millions.</p>
-                <p>[2] Polygon does not settle transactions on Ethereum, simply committing its state root on Ethereum. A
+                <p>[2] Sidechain on Ethereum.</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Sidechain security</h3>
+                <table>
+                    <tr>
+                        <th>Avalanche</th>
+                        <th>Polygon</th>
+                    </tr>
+                    <tr>
+                        <td>L1 with own validator set (<a href="https://subnets.avax.network/stats/validators"
+                                target="_blank">>1,200</a>)</td>
+                        <td>Sidechain (<a href="https://staking.polygon.technology/" target="_blank">100</a>)</td>
+                    </tr>
+                </table>
+                <p>Polygon does not settle transactions on Ethereum, simply committing its state root on Ethereum. A
                     sidechain does not leverage the security or decentralization of the base chain layer, since without
                     a permissionless fraud challenger, the <a
                         href="https://twitter.com/toghrulmaharram/status/1600197606050648066" target="_blank">sidechain
