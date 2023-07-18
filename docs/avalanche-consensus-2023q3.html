@@ -1,0 +1,510 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>Avalanche consensus</title>
+
+    <link rel="stylesheet" href="dist/reset.css">
+    <link rel="stylesheet" href="dist/reveal.css">
+    <link rel="stylesheet" href="dist/theme/white.css">
+
+    <!-- Theme used for syntax highlighted code -->
+    <link rel="stylesheet" href="plugin/highlight/monokai.css">
+
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/hack-font@3/build/web/hack.css">
+    <style>
+        li.hack {
+            font-family: Hack, monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section>
+                <h3>Avalanche consensus</h3>
+                <p><a target="_blank"
+                        href="https://talk.gyuho.dev/avalanche-consensus-2023q3.html">talk.gyuho.dev/avalanche-consensus-2023q3.html</a>
+                </p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section data-background-gradient="linear-gradient(to bottom, #0289ee, #badefe)">
+                <h3>Who am I?</h3>
+                <ul>
+                    <li>이규호 (Gyuho Lee)</li>
+                    <li>Protocol Engineer, Ava Labs</li>
+                    <li>prev. Senior SDE, AWS EKS</li>
+                    <li>Top contributor to <a href="https://github.com/etcd-io/etcd" target="_blank">etcd</a></li>
+                    <li><a target="_blank" href="https://github.com/gyuho">github.com/gyuho</a></li>
+                    <li><a target="_blank" href="https://linkedin.com/in/gyuho">linkedin.com/in/gyuho</a></li>
+                    <li><a target="_blank" href="https://twitter.com/gyuhox">twitter.com/gyuhox</a></li>
+                    <li><a target="_blank" href="https://t.me/leegyuho">t.me/leegyuho</a> (Telegram)</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>What sets Avalanche apart?</h3>
+                <p>"The fact that it works, it's fast, it scales, can grow and absorb any use case, can be used for
+                    compliant asset offerings. Bitcoin is single asset, single chain. Ethereum is multi-asset, single
+                    chain. Avalanche is multi-asset, multi-chain system. Most decentralized with fastest consensus
+                    finality."
+                </p>
+                <p><a target="_blank" href="https://www.youtube.com/live/-OKav0rjZJg?feature=share&t=2485">All Access
+                        with Emin Gün Sirer - Ep. 51</a> (2023)</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <section>
+                <h3>Blockchain should ...</h3>
+                <ul>
+                    <li>Scale to millions nodes (decentralization)</li>
+                    <li>Consensus with sub-second finality (performance)</li>
+                    <li>Flexibility to support app-specific chain</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!-- Consensus: Part I -->
+            <section>
+                <h2>Avalanche Consensus: Part I</h2>
+                <h3>☃️</h3>
+                <p>Snowman protocol</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Consensus</h3>
+                <p>"Assume a collection of processes that can propose values. A consensus algorithm ensures that a
+                    single one among the proposed values is chosen." Leslie Lamport, <a target="_blank"
+                        href="https://lamport.azurewebsites.net/pubs/paxos-simple.pdf">Paxos Made Simple
+                        (2001)</a>
+                </p>
+                <p>Should this transaction be placed in a block or not?</p>
+                <p>PoW or PoS is NOT a consensus mechanism!</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Consensus Until Now</h3>
+                <h4>Classical (<a target="_blank"
+                        href="https://lamport.azurewebsites.net/pubs/lamport-paxos.pdf">Lamport 1998</a>,
+                    Paxos/Raft/etcd)</h4>
+                <ul>
+                    <li>CFT (crash-fault tolerant)</li>
+                    <li>Quick finality but does not scale</li>
+                    <li>Quadratic message complexity</li>
+                    <li>Permissioned, requires precise membership</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Consensus Until Now</h3>
+                <h4>Nakamoto (<a target="_blank" href="https://bitcoin.org/bitcoin.pdf">Bitcoin 2008</a>)</h4>
+                <ul>
+                    <li>Robust, no need for precise membership</li>
+                    <li>High latency, low throughput</li>
+                    <li>Wastes energy, not green, not sustainable</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Consensus Until Now</h3>
+                <h4>PBFT (<a target="_blank" href="https://pmg.csail.mit.edu/papers/osdi99.pdf">1999</a>)</h4>
+                <ul>
+                    <li>Powers many PoS networks (Tendermint, Casper)</li>
+                    <li>Committee/leader-based</li>
+                    <ul>
+                        <li>Can't scale easily ("leader/coordinator" dilemma)</li>
+                        <li>Quorum-based: must know all participants</li>
+                        <li>Fast when membership is small</li>
+                    </ul>
+                    <li>Deterministic safety (100% safe)</li>
+                    <ul>
+                        <li>Hard limit on the Byzantine adversaries</li>
+                    </ul>
+                    <li>Many are very complicated</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Avalanche Consensus Family</h3>
+                <ul>
+                    <li>Published in <a target="_blank" href="https://www.avalabs.org/whitepapers">2020</a></li>
+                    <li>Instant finality, low latency (~1 sec)</li>
+                    <li>High throughput (>6,000 TPS)</li>
+                    <li>Scales >10-million nodes</li>
+                    <li>Robust, no need for precise membership</li>
+                    <li>Leaderless*</li>
+                    <li>Quiescent, green, sustainable</li>
+                    <li>Inspired by epidemic protocols and gossip networks</li>
+                    <li>New idea: deliberately metastable</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Avalanche Sustainability</h3>
+                <img width="750" src="avalanche/avalanche-crypto-carbon-raitings-institute-2022.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Binary Consensus</h3>
+                <ul>
+                    <li>Pick one <text style="color:red;">red</text>/<text style="color:blue;">blue</text> -- no correct
+                        answer</li>
+                    <li>Adopt the majority color by repeated sub-sampling</li>
+                    <li>Consensus results in the entire network agreeing on either <text style="color:red;">red</text>
+                        or <text style="color:blue;">blue</text></li>
+                    <li>Even with 50/50 split, random perturbation in the sampling results in a single value being
+                        selected</li>
+                </ul>
+                <img src="avalanche/avalanche-binary-choice.gif"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section data-transition="none">
+                <p>At the beginning, pick any color (no correct answer)</p>
+                <p>Radomly sub-sample the network</p>
+                <img src="avalanche/avalanche-network-1.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section data-transition="none">
+                <p>"Red" is the majority from the sample</p>
+                <p>Adopt the majority color, "red"</p>
+                <img src="avalanche/avalanche-network-2.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section data-transition="none">
+                <p>Repeat this random sampling in parallel, in all nodes</p>
+                <p>Repeated random sampling perturbs conflicting state</p>
+                <img src="avalanche/avalanche-network-3.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section data-transition="none">
+                <p>Sequence of metastable process of random sampling</p>
+                <p>All converge to the same value (agreement)</p>
+                <img src="avalanche/avalanche-network-4.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <p>"The protocol is designed to tip" (<a target="_blank"
+                        href="https://youtu.be/Sfb8G54AM_4">YouTube</a>)</p>
+                <video width="600" height="500" controls>
+                    <source src="avalanche/avalanche-instant-finality.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <p>See also <a target="_blank" href="https://www.youtube.com/live/-OKav0rjZJg?feature=share&t=2723">All
+                        Access with Emin Gün Sirer - Ep. 51</a> (2023)</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Fast Finality</h3>
+                <p>Avalanche == no block re-org, no longest chain rule</p>
+                <ul>
+                    <li>Re-org in game? May lose item after tx revert</li>
+                    <li>Re-org in bridge? Must wait longer for source chain</li>
+                    <li>Re-org in payment? May lose money for goods</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!-- Consensus: Part II -->
+            <section>
+                <h2>Avalanche Consensus: Part II</h2>
+                <h3>☃️</h3>
+                <p>Real-world examples</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Review: CFT consensus</h3>
+                <p>Paxos/Raft == voting-based consensus</p>
+                <ul>
+                    <li>Voting on a single value</li>
+                    <li>Two-phase voting</li>
+                    <li>Deterministic, requires quorum</li>
+                    <li>Static membership, permissioned</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Review: BFT consensus</h3>
+                <p>Avalanche/Snowman == binary consensus</p>
+                <ul>
+                    <li>IT'S NOT YES/NO on specific transaction</li>
+                    <li>Simply decide YES on something (block)</li>
+                    <li>No correct answer, just choose one</li>
+                    <li>Probabilistic (requires quorum)</li>
+                    <li>Loose/dynamic membership, permissionless</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>"When" CFT consensus</h3>
+                <p>Use Paxos/* for permissioned environment</p>
+                <ul>
+                    <li>Kubernetes uses etcd for metadata storage</li>
+                    <li>All etcd nodes are gated behind private network</li>
+                    <li>~10ms finality (within a single region)</li>
+                </ul>
+                <p>Real-world challenges</p>
+                <ul>
+                    <li>Consensus for each value limits write throughput</li>
+                    <li>Consensus itself does not give read linearizability</li>
+                    <li>Very hard to update membership (~5 members)</li>
+                    <li>Storage limit (soft-cap): 10 GiB</li>
+                    <li>Requires leader</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>"When" BFT consensus</h3>
+                <p>Use BFT/Avalanche for permissionless environment</p>
+                <ul>
+                    <li>No static membership, anybody can join consensus</li>
+                    <li>Avalanche network has >1,300 validators</li>
+                    <li>Block-based consensus, can batch transactions</li>
+                    <li>Can be leaderless</li>
+                </ul>
+                <p>Real-world challenges</p>
+                <ul>
+                    <li>Sybil attack resistance (e.g., fee, rate limit)</li>
+                    <li>No storage limit but longer state sync</li>
+                    <li>Merkl-ized states for data sync integrity</li>
+                    <li>Transaction mempool can be complicated</li>
+                </ul>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>"How" CFT consensus: Raft</h3>
+                <p>Phase 1. Elect leader that handles proposals</p>
+                <img width="700" src="avalanche/cft-figure-1-paxos-consensus.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>"How" CFT consensus: Raft</h3>
+                <p>Phase 2. Agree on a single value by voting</p>
+                <img width="650" src="avalanche/cft-figure-2-etcd-message-relay.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>"How" BFT consensus: Avalanche</h3>
+                <p>Avalance/snowman builds up from "Slush"</p>
+                <img width="750" src="avalanche/bft-figure-1-snow-family.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>"How" Avalanche consensus: EVM</h3>
+                <p>Phase 1. Gossip transactions from mempool</p>
+                <img width="650" src="avalanche/bft-figure-1-snow-consensus.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>"How" Avalanche consensus: EVM</h3>
+                <p>Phase 2. Execute transactions and build a block</p>
+                <img width="650" src="avalanche/bft-figure-2-snow-consensus.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>"How" Avalanche consensus: EVM</h3>
+                <p>Phase 3. Issue a block to consensus and query its peers</p>
+                <img width="620" src="avalanche/bft-figure-3-snow-consensus.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>"How" Avalanche consensus: EVM</h3>
+                <p>Phase 4. Run binary consensus and finalize a block</p>
+                <img width="650" src="avalanche/bft-figure-4-snow-consensus.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!-- Subnet -->
+            <section>
+                <h2>Avalanche Subnet 🔺</h2>
+                <p>What is Subnet?</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Primary Network == Special Subnet</h3>
+                <ul>
+                    <li><b>X-chain</b> is used for exchanging assets</li>
+                    <li><b>P-chain</b> coordinates validators and subnets</li>
+                    <li><b>C-chain</b> executes EVM contracts with ETH RPCs</li>
+                </ul>
+                <p>Subnet validator must validate primary network!</p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Subnet (sub-network)</h3>
+                <img width="600" src="avalanche/emin-john-subnet-2022.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Subnets</h3>
+                <img width="900" src="avalanche/subnets-graph.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section>
+                <h3>Subnets provide failure isolation</h3>
+                <p>Failure in one subnet does not impact the other!</p>
+                <p>Thus better fault tolerance and better reliability!</p>
+                <img width="900" src="avalanche/subnets-graph-failures.png"></img>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!---->
+            <!-- Conclusions/Contributions -->
+            <!-- What did you do that hasn’t been done before? Use “sanctioned verbs” such as prove, demonstrate, implement, test (experiment), frame (problem), survey, identify (key problem), present, speculate, worked out (table, classification). -->
+            <section>
+                <h2>Contributions</h2>
+                <ul>
+                    <li>Explained how Avalanche consensus works</li>
+                    <li>Explained why Avalanche blockchain is scalable</li>
+                    <ul>
+                        <li>Reliability with the fastest tx finality</li>
+                        <li>Flexibility to run custom VMs with custom tokens</li>
+                    </ul>
+                </ul>
+                <p>See <a target="_blank"
+                    href="https://talk.gyuho.dev/why-avalanche-2023q2.html">talk.gyuho.dev/why-avalanche-2023q2.html</a> for more platform info.
+                </p>
+                <aside class="notes">
+                </aside>
+            </section>
+        </div>
+    </div>
+
+    <script src="dist/reveal.js"></script>
+    <script src="plugin/notes/notes.js"></script>
+    <script src="plugin/markdown/markdown.js"></script>
+    <script src="plugin/highlight/highlight.js"></script>
+    <script>
+        Reveal.initialize({
+            hash: true,
+            slideNumber: 'c/t',
+            plugins: [RevealMarkdown, RevealHighlight, RevealNotes]
+        });
+    </script>
+</body>
+
+</html>
